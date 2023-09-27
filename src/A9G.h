@@ -43,7 +43,8 @@ private:
 
     bool _debug;
     unsigned long _maxWaitTimeMS;
-    int _baudRate;
+
+
 
     bool is_mqtt_error;
     bool is_mqtt;
@@ -66,10 +67,10 @@ public:
     bool new_command_received;
     char command[MAX_MSG_SIZE];
 
-    GSM(HardwareSerial &A9G, uint32_t baudRate, bool debug);
+    GSM(HardwareSerial &A9G, bool debug);
 
 //pass a param baudrate in init fun. remove baudrate from class
-    void init();
+    void init(uint32_t baudRate);
     void vProcessIncomingData();
     bool bCheckRespose(const int timeout); // need to fix timeout need to reduce
 

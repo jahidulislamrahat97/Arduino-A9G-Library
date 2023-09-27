@@ -23,8 +23,8 @@
 
 #include "A9G.h"
 
-GSM::GSM(HardwareSerial &A9G, uint32_t baudRate, bool debug)
-    : _gsm(A9G), _debug(debug), _maxWaitTimeMS(MAX_WAIT_TIME_MS), _baudRate(baudRate)
+GSM::GSM(HardwareSerial &A9G, bool debug)
+    : _gsm(A9G), _debug(debug), _maxWaitTimeMS(MAX_WAIT_TIME_MS)
 {
     is_mqtt_error = false;
     is_mqtt = false;
@@ -37,9 +37,9 @@ GSM::GSM(HardwareSerial &A9G, uint32_t baudRate, bool debug)
     gsm_config = false;
 }
 
-void GSM::init()
+void GSM::init(uint32_t baudRate)
 {
-    _gsm.begin(_baudRate);
+    _gsm.begin(baudRate);
 }
 
 void GSM::vProcessIncomingData()
