@@ -1,3 +1,27 @@
+/*!
+ * @file A9G.cpp
+ *
+ * @mainpage A9G Library
+ *
+ * @section intro_sec Introduction
+ *
+ * This is a library for the A9/A9G Library
+ *
+ * Designed specifically to work with the A9 & A9G Breakout
+ * ----> http://www.ai-thinker.com/pro_view-77.html
+ * ----> http://www.ai-thinker.com/pro_view-78.html
+ *
+ * These A9/A9G to communicate using UART, 2 pins are required to interface.
+ * We invests some time and resources providing this open source code,
+ * please support open-source hardware and software by contribute your talent.
+ *
+ * @section author Author
+ *
+ * Written by Jahidul Islam Rahat/Zahan Zib Sarowar Dhrubo for esp32 and arduino.
+ *
+ */
+
+
 #include "A9G.h"
 
 GSM::GSM(HardwareSerial &A9G, uint32_t baudRate, bool debug)
