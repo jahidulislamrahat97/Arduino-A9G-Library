@@ -80,19 +80,19 @@ public:
     bool IsGPRSAttached();
     bool AttachToGPRS();
     bool DetachToGPRS();
-    bool SetAPN(const char *pdp_type, const char *apn);
+    bool SetAPN(const char pdp_type[], const char apn[]);
     bool ActivatePDP();
     bool DeactivatePDP();
 
     // MQTT Command
-    bool ConnectToBroker(const char *broker, int port, const char *id, uint8_t keep_alive, uint16_t clean_session);
-    bool ConnectToBroker(const char *broker, int port);
+    bool ConnectToBroker(const char broker[], int port, const char id[], uint8_t keep_alive, uint16_t clean_session);
+    bool ConnectToBroker(const char broker[], int port);
     bool DisconnectBroker();
-    bool SubscribeToTopic(const char *topic, uint8_t qos, unsigned long timeout);
-    bool SubscribeToTopic(char *topic);
-    bool UnsubscribeToTopic(char *topic);
-    bool PublishToTopic(const char *topic, uint8_t qos, uint8_t retain, uint8_t dup, const char *msg, uint16_t msg_len, unsigned long timeout); // not ready
-    bool PublishToTopic(const char *topic, const char *msg);
+    bool SubscribeToTopic(const char topic[], uint8_t qos, unsigned long timeout);
+    bool SubscribeToTopic(const char topic[]);
+    bool UnsubscribeToTopic(const char topic[]);
+    bool PublishToTopic(const char topic[], const char msg[], uint8_t qos, uint8_t retain, uint8_t dup, uint16_t msg_len, unsigned long timeout); // not ready
+    bool PublishToTopic(const char topic[], const char msg[]);
 
     // bool vConnectGPRS();
     // void vConnectToBroker(const char *broker, int port, const char *id);

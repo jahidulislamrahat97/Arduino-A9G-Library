@@ -339,7 +339,7 @@ bool GSM::DetachToGPRS()
         return false;
 }
 
-bool GSM::SetAPN(const char *pdp_type, const char *apn)
+bool GSM::SetAPN(const char pdp_type[], const char apn[])
 {
     _gsm.print("AT+CGDCONT=1,\"");
     _gsm.print(pdp_type);
@@ -368,7 +368,7 @@ bool GSM::ActivatePDP()
         return false;
 }
 
-bool GSM::ConnectToBroker(const char *broker, int port, const char *id, uint8_t keep_alive, uint16_t clean_session)
+bool GSM::ConnectToBroker(const char broker[], int port, const char id[], uint8_t keep_alive, uint16_t clean_session)
 {
     _gsm.print("AT+MQTTCONN=\"");
     _gsm.print(broker);
@@ -390,7 +390,7 @@ bool GSM::ConnectToBroker(const char *broker, int port, const char *id, uint8_t 
         return false;
 }
 
-bool GSM::ConnectToBroker(const char *broker, int port)
+bool GSM::ConnectToBroker(const char broker[], int port)
 {
     char id[10] = "\0";
     sprintf(id, "%d", random(10000, 100000));
@@ -425,7 +425,7 @@ bool GSM::DisconnectBroker()
     else
         return false;
 }
-bool GSM::SubscribeToTopic(const char *topic, uint8_t qos, unsigned long timeout)
+bool GSM::SubscribeToTopic(const char topic[], uint8_t qos, unsigned long timeout)
 {
     _gsm.print("AT+MQTTSUB=\"");
     _gsm.print(topic);
@@ -442,7 +442,7 @@ bool GSM::SubscribeToTopic(const char *topic, uint8_t qos, unsigned long timeout
     else
         return false;
 }
-bool GSM::SubscribeToTopic(char *topic)
+bool GSM::SubscribeToTopic(const char topic[])
 {
     _gsm.print("AT+MQTTSUB=\"");
     _gsm.print(topic);
@@ -460,7 +460,7 @@ bool GSM::SubscribeToTopic(char *topic)
         return false;
 }
 
-bool GSM::UnsubscribeToTopic(char *topic)
+bool GSM::UnsubscribeToTopic(const char topic[])
 {
     _gsm.print("AT+MQTTUNSUB=\"");
     _gsm.print(topic);
@@ -494,7 +494,7 @@ bool GSM::UnsubscribeToTopic(char *topic)
 //     else
 //         return false;
 // }
-bool GSM::PublishToTopic(const char *topic, const char *msg)
+bool GSM::PublishToTopic(const char topic[], const char msg[])
 {
     _gsm.print("AT+MQTTPUB=\"");
     _gsm.print(topic);
