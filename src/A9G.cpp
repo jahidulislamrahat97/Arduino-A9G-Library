@@ -15,12 +15,11 @@
  * We invests some time and resources providing this open source code,
  * please support open-source hardware and software by contribute your talent.
  *
- * @section author Author
+ * @section author
  *
  * Written by Jahidul Islam Rahat/Zahan Zib Sarowar Dhrubo for esp32 and arduino.
  *
  */
-
 
 #include "A9G.h"
 
@@ -240,7 +239,8 @@ bool GSM::bCheckRespose(const int timeout)
     return false;
 }
 
-bool GSM::bIsReady(){
+bool GSM::bIsReady()
+{
     _gsm.println("AT");
     if (bCheckRespose(2000))
     {
@@ -257,10 +257,10 @@ bool GSM::bIsReady(){
  * it's not neccesary to use this function.
  * it will not usefull that much.
  * but it would be good for further move
- * 
- * 
- * @return true 
- * @return false 
+ *
+ *
+ * @return true
+ * @return false
  */
 bool GSM::waitForReady()
 {
@@ -300,12 +300,39 @@ bool GSM::waitForReady()
     return false;
 }
 
+bool GSM::IsGPRSAttached()
+{
+    _gsm.println("AT+CGATT?");
+    if (bCheckRespose(2000))
+    {
+        Serial.println(F("GPRS Attached"));
+        return true;
+    }
+    else
+    {
+        Serial.println(F("GPRS is not Attached"));
+        return false;
+    }
+}
+
 bool GSM::AttachToGPRS()
 {
     _gsm.println("AT+CGATT=1");
     if (bCheckRespose(2000))
     {
         Serial.println(F("Attach to GPRS Success"));
+        return true;
+    }
+    else
+        return false;
+}
+
+bool GSM::DetachToGPRS()
+{
+    _gsm.println("AT+CGATT=0");
+    if (bCheckRespose(2000))
+    {
+        Serial.println(F("Detach to GPRS Success"));
         return true;
     }
     else
@@ -319,7 +346,6 @@ bool GSM::SetAPN(const char *pdp_type, const char *apn)
     _gsm.print("\",\"");
     _gsm.print(apn);
     _gsm.println("\"");
-
 
     if (bCheckRespose(2000))
     {
@@ -364,6 +390,30 @@ bool GSM::ConnectToBroker(const char *broker, int port, const char *id, uint8_t 
         return false;
 }
 
+bool GSM::ConnectToBroker(const char *broker, int port)
+{
+    char id[10] = "\0";
+    sprintf(id, "%d", random(10000, 100000));
+    _gsm.print("AT+MQTTCONN=\"");
+    _gsm.print(broker);
+    _gsm.print("\",");
+    _gsm.print(port);
+    _gsm.print(",\"");
+    _gsm.print(id);
+    _gsm.print("\",");
+    _gsm.print(120);
+    _gsm.print(",");
+    _gsm.println(0);
+
+    if (bCheckRespose(2000))
+    {
+        Serial.println(F("Connected To Broker"));
+        return true;
+    }
+    else
+        return false;
+}
+
 bool GSM::DisconnectBroker()
 {
     _gsm.println("AT+MQTTDISCONN");
@@ -386,16 +436,64 @@ bool GSM::SubscribeToTopic(const char *topic, uint8_t qos, unsigned long timeout
 
     if (bCheckRespose(2000))
     {
-        Serial.printf("Subscribe To Topic:\"%s\"  success\n",topic);
+        Serial.printf("Subscribe To Topic:\"%s\"  success\n", topic);
         return true;
     }
     else
         return false;
 }
-// bool bSubscribeToTopic(char *topic);
-// bool bUnsubscribeToTopic(char *topic);
-// bool bPublishToTopic(char *topic, uint8_t qos, uint8_t retain, uint8_t dup, const char *msg, uint16_t msg_len, unsigned long timeout); // not right now
+bool GSM::SubscribeToTopic(char *topic)
+{
+    _gsm.print("AT+MQTTSUB=\"");
+    _gsm.print(topic);
+    _gsm.print("\",");
+    _gsm.print(1);
+    _gsm.print(",");
+    _gsm.println(0);
 
+    if (bCheckRespose(2000))
+    {
+        Serial.printf("Subscribe To Topic:\"%s\"  success\n", topic);
+        return true;
+    }
+    else
+        return false;
+}
+
+bool GSM::UnsubscribeToTopic(char *topic)
+{
+    _gsm.print("AT+MQTTUNSUB=\"");
+    _gsm.print(topic);
+    _gsm.println("\"");
+    if (bCheckRespose(2000))
+    {
+        Serial.printf("Unsubscribe To Topic:\"%s\"  success\n", topic);
+        return true;
+    }
+    else
+        return false;
+}
+
+// bool GSM::PublishToTopic(const char *topic, uint8_t qos, uint8_t retain, uint8_t dup, const char *msg, uint16_t msg_len, unsigned long timeout){
+// AT+MQTTPUB="<topic>",<qos>,<retain>,<dup>,"<message>",<message_len>,<timeout>: Publish a message to an MQTT topic.
+// _gsm.print("AT+MQTTPUB=\"");
+//     _gsm.print(topic);
+//     _gsm.print("\",\"");
+//     _gsm.print(msg);
+//     _gsm.print("\",");
+//     _gsm.print("2");
+//     _gsm.print(",");
+//     _gsm.print(msg_len);
+//     _gsm.print(",");
+//     _gsm.println(timeout);
+
+//     if (bCheckRespose(2000))
+//     {
+//         return true;
+//     }
+//     else
+//         return false;
+// }
 bool GSM::PublishToTopic(const char *topic, const char *msg)
 {
     _gsm.print("AT+MQTTPUB=\"");
@@ -411,10 +509,6 @@ bool GSM::PublishToTopic(const char *topic, const char *msg)
     else
         return false;
 }
-
-
-
-
 
 // void GSM::vReadResidualData(bool print)
 // {
@@ -490,4 +584,3 @@ bool GSM::PublishToTopic(const char *topic, const char *msg)
 
 //     return ok_rcv;
 // }
-

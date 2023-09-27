@@ -15,7 +15,7 @@
  * We invests some time and resources providing this open source code,
  * please support open-source hardware and software by contribute your talent.
  *
- * @section author Author
+ * @section author
  *
  * Written by Jahidul Islam Rahat/Zahan Zib Sarowar Dhrubo for esp32 and arduino.
  *
@@ -77,19 +77,21 @@ public:
     bool waitForReady();
 
     // GPRS/Internet Commands
+    bool IsGPRSAttached();
     bool AttachToGPRS();
-    bool DetachToGPRS(); // not right now
+    bool DetachToGPRS();
     bool SetAPN(const char *pdp_type, const char *apn);
     bool ActivatePDP();
-    bool DeactivatePDP(); // not right now
+    bool DeactivatePDP();
 
     // MQTT Command
     bool ConnectToBroker(const char *broker, int port, const char *id, uint8_t keep_alive, uint16_t clean_session);
+    bool ConnectToBroker(const char *broker, int port);
     bool DisconnectBroker();
-    bool SubscribeToTopic(const char *topic, uint8_t qos, unsigned long timeout); // not right now
+    bool SubscribeToTopic(const char *topic, uint8_t qos, unsigned long timeout);
     bool SubscribeToTopic(char *topic);
     bool UnsubscribeToTopic(char *topic);
-    bool PublishToTopic(const char *topic, uint8_t qos, uint8_t retain, uint8_t dup, const char *msg, uint16_t msg_len, unsigned long timeout); // not right now
+    bool PublishToTopic(const char *topic, uint8_t qos, uint8_t retain, uint8_t dup, const char *msg, uint16_t msg_len, unsigned long timeout); // not ready
     bool PublishToTopic(const char *topic, const char *msg);
 
     // bool vConnectGPRS();
@@ -126,6 +128,9 @@ AT+CCID: Read the ICCID (Integrated Circuit Card Identifier) of the SIM card.
 
 AT+CGSN: Get the IMEI (International Mobile Equipment Identity) of the module.
 
+
+
+
 GPRS/Internet Commands:
 
 AT+CGATT?: Check if GPRS is attached.
@@ -138,6 +143,7 @@ AT+CGDCONT=<cid>,"<PDP_type>","<APN>": Set the APN for data connection.
 
 AT+CGACT=<state>[,<cid>]: Activate or deactivate a PDP context.
 
+//TCP/IP Commands:
 AT+CIPSTATUS: Check current connection status.
 
 AT+CIPSTART=<type>,"<remote_IP>",<remote_port>: Start a TCP/IP connection.
@@ -150,6 +156,10 @@ AT+CIPMUX=<mode>: Set multiple connections mode.
 
 AT+CIFSR: Get local IP address.
 
+
+
+
+
 MQTT Commands (if supported):
 
 AT+MQTTCONN="<broker>","<port>","<client_id>",<keep_alive>,<clean_session>: Connect to MQTT broker.
@@ -161,6 +171,8 @@ AT+MQTTPUB="<topic>",<qos>,<retain>,<dup>,"<message>",<message_len>,<timeout>: P
 AT+MQTTSUB="<topic>",<qos>,<timeout>: Subscribe to an MQTT topic.
 
 AT+MQTTUNSUB="<topic>": Unsubscribe from an MQTT topic.
+
+
 
 Other Commands:
 
