@@ -1,0 +1,32 @@
+###########################################
+# Syntax Coloring Map For A9G_Library
+###########################################
+
+###########################################
+# Datatypes (KEYWORD1)
+###########################################
+
+GSM	KEYWORD1
+
+###########################################
+# Methods and Functions (KEYWORD2)
+###########################################
+init	KEYWORD2
+
+
+AttachToGPRS	KEYWORD2
+DetachToGPRS	KEYWORD2
+SetAPN	KEYWORD2
+ActivatePDP	KEYWORD2
+DeactivatePDP	KEYWORD2
+
+
+ConnectToBroker	KEYWORD2
+DisconnectBroker	KEYWORD2
+SubscribeToTopic	KEYWORD2
+UnsubscribeToTopic	KEYWORD2
+PublishToTopic	KEYWORD2
+
+###########################################
+# Constants (LITERAL1)
+###########################################
