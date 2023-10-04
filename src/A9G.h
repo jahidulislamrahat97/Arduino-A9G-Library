@@ -5,20 +5,24 @@
  *
  * @section intro_sec Introduction
  *
- * This is a library for the A9/A9G Library
+ * This is a library for the A9/A9G
  *
  * Designed specifically to work with the A9 & A9G Breakout
  * ----> http://www.ai-thinker.com/pro_view-77.html
  * ----> http://www.ai-thinker.com/pro_view-78.html
  *
- * These A9/A9G to communicate using UART, 2 pins are required to interface.
+ * These A9/A9G communicate using UART, 2 pins are required to interface.
  * We invests some time and resources providing this open source code,
  * please support open-source hardware and software by contribute your talent.
  *
- * @section author
+ * @section author Author
  *
  * Written by Jahidul Islam Rahat/Zahan Zib Sarowar Dhrubo for esp32 and arduino.
- *
+ * 
+ * @section license License
+ * 
+ * MIT license, (see LICENSE)
+ * 
  */
 
 #ifndef A9G_H
