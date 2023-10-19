@@ -30,6 +30,7 @@
 
 #include <Arduino.h>
 #include <HardwareSerial.h>
+#include "A9G_Event.h"
 
 #define MAX_WAIT_TIME_MS 60000
 #define MAX_TERM_SIZE 100
@@ -58,25 +59,73 @@ private:
     bool received;
 
     char did[21];
-    char term[MAX_TERM_SIZE];
-    char number[16];
+    char _term[MAX_TERM_SIZE];
     char msg[MAX_MSG_SIZE];
 
-    // void vReadResidualData(bool print);
-    // void vWaitForResponse(unsigned long timeout);
-    // bool bReadResponse(); // reads the AT response and returns true if there is OK in the response and false otherwise
 
+    bool _new_data_received;
+
+    char _source[MAX_MSG_SIZE];
+    char _payload[MAX_MSG_SIZE];
+    char _topic[MAX_MSG_SIZE];
+    char _number[16];
+    char _errorType[MAX_MSG_SIZE];
+    uint16_t _error;
+
+    typedef void (*DataCallbackFunction)(const char *source, const char *payload, const char *topic);
+    typedef void (*EventDispatchCallback)(A9G_Event_t *event);
+    DataCallbackFunction _callback = nullptr;
+    EventDispatchCallback _eventCallback = nullptr;
+
+
+    /**
+     * @brief 
+     * @todo write comment for every term [https://wiki.dfrobot.com/A9G_Module_SKU_TEL0134]
+     */
+    typedef enum Term_List_t
+    {
+        TERM_CREG=0,
+        TERM_CTZV, //network related: not clear
+        TERM_CIEV, // call
+        TERM_CPMS,
+        TERM_CMT,
+        TERM_CMGL,
+        TERM_CMGR,
+        TERM_GPSRD,
+        TERM_CGATT,
+        TERM_AGPS,
+        TERM_GPNT,
+        TERM_MQTTPUBLISH,
+        TERM_CMGS,
+        TERM_CME,
+        TERM_CMS,
+        TERM_MAX,
+        TERM_NONE
+    } Term_List_t;
+
+    const char _terms_string[20][15] = {"CREG","CTZV","CIEV","CPMS","CMT","CMGL","CMGR","GPSRD","CGATT","AGPS","GPNT","MQTTPUBLISH","CMGS","CME ERROR", "CMS ERROR"};
+    uint8_t _checkTermFromString(const char* term_str);
+    void _processTermString(A9G_Event_t *event, const char data[], int data_len);
 public:
-    bool gsm_config;
-    bool new_command_received;
-    char command[MAX_MSG_SIZE];
 
     GSM(HardwareSerial &A9G, bool debug);
 
-//pass a param baudrate in init fun. remove baudrate from class
+    //pass a param baudrate in init fun. remove baudrate from class
     void init(uint32_t baudRate);
-    void vProcessIncomingData();
+    
     bool bCheckRespose(const int timeout); // need to fix timeout need to reduce
+    void EventDispatch(EventDispatchCallback eventCallback);
+    void executeCallback();
+
+    // do not use it further.
+    void vProcessIncomingData();
+    void RegisterDataCallback(DataCallbackFunction callback);
+
+    void errorPrintCME(int ret);
+    void errorPrintCMS(int ret);
+    
+    
+
 
     bool bIsReady();
     bool waitForReady();
