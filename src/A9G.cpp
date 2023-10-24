@@ -16,9 +16,12 @@
  * please support open-source hardware and software by contribute your talent.
  *
  * @section author Author
- * Written by Jahidul Islam Rahat/Zahan Zib Sarowar Dhrubo for esp32 and arduino.
+ * 
+ * Written by Jahidul Islam Rahat for esp32.
  *
+ * 
  * @section license License
+ * 
  * MIT license, (see LICENSE)
  *
  */
@@ -422,16 +425,7 @@ bool GSM::bIsReady()
         return false;
 }
 
-/**
- * @brief waring!!! blocking function. it will take 15s to 60s.
- * it's not neccesary to use this function.
- * it will not usefull that much.
- * but it would be good for further move
- *
- *
- * @return true
- * @return false
- */
+
 bool GSM::waitForReady()
 {
     char responseBuffer[100]; // Adjust the size as per your needs
@@ -822,14 +816,6 @@ bool GSM::SendMessage(const char number[], const char message[])
         return false;
     }
 }
-
-/*
-
-+CIEV: +CIEV,"MESSAGE",1
-+CMTI: +CMTI,"ME",17
-
-*/
-
 
 
 void GSM::errorPrintCME(int ret)
