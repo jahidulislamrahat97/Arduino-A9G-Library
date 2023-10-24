@@ -48,33 +48,9 @@ private:
 
     bool _debug;
     unsigned long _maxWaitTimeMS;
+    bool _isSMS;
 
-
-
-    bool is_mqtt_error;
-    bool is_mqtt;
-    bool is_sms;
-    bool sms_read;
-    bool complete_data;
-    bool received;
-
-    char did[21];
-    char _term[MAX_TERM_SIZE];
-    char msg[MAX_MSG_SIZE];
-
-
-    bool _new_data_received;
-
-    char _source[MAX_MSG_SIZE];
-    char _payload[MAX_MSG_SIZE];
-    char _topic[MAX_MSG_SIZE];
-    char _number[16];
-    char _errorType[MAX_MSG_SIZE];
-    uint16_t _error;
-
-    typedef void (*DataCallbackFunction)(const char *source, const char *payload, const char *topic);
     typedef void (*EventDispatchCallback)(A9G_Event_t *event);
-    DataCallbackFunction _callback = nullptr;
     EventDispatchCallback _eventCallback = nullptr;
 
 
@@ -89,6 +65,7 @@ private:
         TERM_CIEV, // call
         TERM_CPMS,
         TERM_CMT,
+        TERM_CMTI,
         TERM_CMGL,
         TERM_CMGR,
         TERM_GPSRD,
@@ -103,32 +80,32 @@ private:
         TERM_NONE
     } Term_List_t;
 
-    const char _terms_string[20][15] = {"CREG","CTZV","CIEV","CPMS","CMT","CMGL","CMGR","GPSRD","CGATT","AGPS","GPNT","MQTTPUBLISH","CMGS","CME ERROR", "CMS ERROR"};
+    const char _terms_string[20][15] = {"CREG","CTZV","CIEV","CPMS","CMT","CMTI","CMGL","CMGR","GPSRD","CGATT","AGPS","GPNT","MQTTPUBLISH","CMGS","CME ERROR", "CMS ERROR"};
     uint8_t _checkTermFromString(const char* term_str);
     void _processTermString(A9G_Event_t *event, const char data[], int data_len);
+    bool _checkResponse(const int timeout); //  it will be private. need to fix timeout
+    bool _checkOk(const int timeout);
+    
 public:
 
-    GSM(HardwareSerial &A9G, bool debug);
 
-    //pass a param baudrate in init fun. remove baudrate from class
+
+    GSM(HardwareSerial &A9G, bool debug);
     void init(uint32_t baudRate);
-    
-    bool bCheckRespose(const int timeout); // need to fix timeout need to reduce
+
+    //callback function for event dispatch
     void EventDispatch(EventDispatchCallback eventCallback);
     void executeCallback();
 
-    // do not use it further.
-    void vProcessIncomingData();
-    void RegisterDataCallback(DataCallbackFunction callback);
-
+   //debuging function
     void errorPrintCME(int ret);
     void errorPrintCMS(int ret);
     
     
-
-
     bool bIsReady();
     bool waitForReady();
+
+    void ReadIMEI();
 
     // GPRS/Internet Commands
     bool IsGPRSAttached();
@@ -145,18 +122,49 @@ public:
     bool SubscribeToTopic(const char topic[], uint8_t qos, unsigned long timeout);
     bool SubscribeToTopic(const char topic[]);
     bool UnsubscribeToTopic(const char topic[]);
-    bool PublishToTopic(const char topic[], const char msg[], uint8_t qos, uint8_t retain, uint8_t dup, uint16_t msg_len, unsigned long timeout); // not ready
     bool PublishToTopic(const char topic[], const char msg[]);
 
-    // bool vConnectGPRS();
-    // void vConnectToBroker(const char *broker, int port, const char *id);
-    // void vDisconnectBroker();
-    // void vSubscribeToTopic(char *topic);
-    // void vPublishToTopic(char *topic, const char *msg);
-    // void vPublishStartMessage(char *topic);
-    // void vReadMessage(char mode);
-    // void vSendMessage(const char *message, const char *number);
-    // void vDeleteMessage(char mode);
+    //SMS Command
+    bool ActivateTE();
+    bool SetFormatReading(bool mode); //1 for txt, 0 for pud format. i don't know what is pud format.
+    /*
+        Drubo: AT+CPMS=\"ME\",\"ME\",\"ME\".  :::
+        DfRobot:>>>
+        AT+CPMS="SM","SM","SM"    //Set message storage unit, and you can also check message capacity 
+        +CPMS: 0,50,0,50,0,50
+    */
+    bool SetMessageStorageUnit();
+    /**
+     * @brief   AT+CPBS?
+     * 
+     * 
+     * @return
+     * 
+     */
+    void CheckMessageStorageUnit();
+    
+    
+    /*
+        AT+CMGR=1        //Read the first message 
+        +CMGR: "REC READ","+86xxxxxxxxxxx",,"2017/10/09,09:14:52+08"
+        +CMGR: "REC UNREAD","+8801687223094",,"2023/10/19,14:18:26+06"
+    */
+    void ReadMessage(uint8_t index); // working..
+
+
+    void DeleteMessage(uint8_t index, Message_Type_t type);
+    bool DeleteAllMessage();
+
+
+
+    /*
+        A9G.print(F("AT+CMGS=\""));
+        A9G.print(number);
+        A9G.print(F("\"\r"));
+        A9G.print(message);
+        A9G.println((char)26);
+    */
+    bool SendMessage(const char number[], const char message[]);
 };
 
 #endif

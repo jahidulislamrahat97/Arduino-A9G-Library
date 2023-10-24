@@ -30,14 +30,7 @@
 GSM::GSM(HardwareSerial &A9G, bool debug)
     : _gsm(A9G), _debug(debug), _maxWaitTimeMS(MAX_WAIT_TIME_MS)
 {
-    is_mqtt_error = false;
-    is_mqtt = false;
-    is_sms = false;
-    is_mqtt_error = false;
-    sms_read = false;
-    _new_data_received = false;
-    complete_data = false;
-    received = false;
+
 }
 
 void GSM::init(uint32_t baudRate)
@@ -45,10 +38,6 @@ void GSM::init(uint32_t baudRate)
     _gsm.begin(baudRate);
 }
 
-void GSM::RegisterDataCallback(DataCallbackFunction callback)
-{
-    _callback = callback; // Store the provided callback function
-}
 void GSM::EventDispatch(EventDispatchCallback eventCallback)
 {
     _eventCallback = eventCallback; // Store the provided callback function
@@ -68,20 +57,20 @@ uint8_t GSM::_checkTermFromString(const char *term_str)
 
 void GSM::_processTermString(A9G_Event_t *event, const char data[], int data_len)
 {
-    Serial.println(" IN _processTermString: ");
-    Serial.print("event->id: ");
-    Serial.println(event->id);
-    Serial.print("data: ");
-    Serial.println(data);
-    Serial.print("data_len: ");
-    Serial.println(data_len);
+    // Serial.println(" IN _processTermString: ");
+    // Serial.print("event->id: ");
+    // Serial.println(event->id);
+    // Serial.print("data: ");
+    // Serial.println(data);
+    // Serial.print("data_len: ");
+    // Serial.println(data_len);
 
     uint8_t comma_count = 0;
+    uint8_t message_count = 0;
 
-    if (event->id == EVENT_MQTTPUBLISH)
+    if (event->id == TERM_MQTTPUBLISH)
     {
         uint8_t topic_count = 0;
-        uint8_t message_count = 0;
         for (int i = 0; i <= data_len; i++)
         {
             if (data[i] == ',')
@@ -92,7 +81,7 @@ void GSM::_processTermString(A9G_Event_t *event, const char data[], int data_len
             if (comma_count == 1)
             {
                 event->topic[topic_count++] = data[i];
-                Serial.print(data[i]);
+                // Serial.print(data[i]);
             }
             if(comma_count == 3){
                 event->message[message_count++] = data[i];
@@ -101,9 +90,90 @@ void GSM::_processTermString(A9G_Event_t *event, const char data[], int data_len
         event->message[message_count++] = '\0';
         event->topic[topic_count++] = '\0';
     }
-    else if (event->id == EVENT_CME)
+    else if (event->id == TERM_CME)
     {
         event->error = atoi(data);
+    }
+    else if(event->id == TERM_CMTI){
+        char temp[5] = "\0";
+        int j =0;
+        for (int i = 0; i <= data_len; i++)
+        {
+            if (data[i] == ',')
+            {
+                comma_count++;
+                continue;
+            }
+            if(comma_count ==1){
+                temp[j++] = data[i];
+            }
+        }
+        temp[j++] = '\0';
+
+        // Serial.print("Message Index:");
+        // Serial.println(temp);
+
+        delay(100);
+        ReadMessage(atoi(temp));
+
+    }
+    else if(event->id == TERM_CMGR){ //sms read 
+        char message[100] = "\0";
+        int j =0;
+        bool sms = 0;
+       
+        while(_gsm.available()){
+            char c = _gsm.read();
+            
+            if(c=='\n'){
+                sms = 1;
+                continue;
+            }
+            if(c=='\r'){
+                sms = 0;
+                event->message[j] = '\0';
+                break;
+            }
+            if(sms){
+                event->message[j++] = c;
+                Serial.print(event->message);
+            }
+            
+        }
+
+        uint8_t qout_count = 0;
+        uint8_t number_count = 0;
+        uint8_t date_time_count = 0;
+        for (int i = 0; i <= data_len; i++)
+        {
+            if (data[i] == '"')
+            {
+                
+                qout_count++;
+                // Serial.print("###: ");
+                // Serial.println(qout_count);
+                continue;
+            }
+            if (qout_count == 3)
+            {
+                event->number[number_count++] = data[i];
+                // Serial.print(event->number);
+            }
+            if(qout_count == 5){
+                event->date_time[date_time_count++] = data[i];
+                // Serial.print(event->date_time);
+            }
+        }
+        event->number[number_count++] = '\0';
+        event->date_time[date_time_count++] = '\0';
+
+        // Serial.print("Message:");
+        // Serial.println(event->message);
+        // Serial.print("Number:");
+        // Serial.println(event->number);
+        // Serial.print("Date & Time:");
+        // Serial.println(event->date_time);
+
     }
 }
 
@@ -115,6 +185,7 @@ void GSM::executeCallback()
     bool term_started = false, term_ended = false;
     bool term_data_started = false, term_data_ended = false;
     char term_data[MAX_MSG_SIZE];
+    char term[MAX_TERM_SIZE];
 
     A9G_Event_t *event = NULL;
     event = (A9G_Event_t *)malloc(sizeof(A9G_Event_t));
@@ -122,7 +193,7 @@ void GSM::executeCallback()
     while (_gsm.available())
     {
         char c = _gsm.read();
-        Serial.print(c);
+        // Serial.print(c);
 
         if (c == '+' && !term_started && !term_ended)
         {
@@ -136,31 +207,31 @@ void GSM::executeCallback()
         if ((c == '=' || c == ':') && !term_ended)
         {
             // Serial.println("********** Term Stop!");
-            _term[term_length] = '\0';
+            term[term_length] = '\0';
             term_ended = 1;
             continue;
         }
 
         if (term_started && !term_ended)
         {
-            _term[term_length++] = c;
+            term[term_length++] = c;
             // Serial.print("term: ");
             // Serial.println(c);
         }
 
         if (term_started && term_ended && !term_data_started)
         {
-            Serial.print(">>>term: ");
-            Serial.println(_term);
+            // Serial.print(">>>term: ");
+            // Serial.println(term);
 
-            int term_id = _checkTermFromString(_term);
+            int term_id = _checkTermFromString(term);
             // Serial.print("term id: ");
             // Serial.println(term_id);
 
             if (term_id == TERM_NONE || term_id == TERM_MAX)
             {
                 // Terminate these term here, we will not process these type in this function. for cemplexity issue.
-                Serial.println("***** Terminating this term here ******");
+                // Serial.println("***** Terminating this term here ******");
                 term_started = 0;
                 term_ended = 0;
                 term_length = 0;
@@ -170,7 +241,7 @@ void GSM::executeCallback()
             else
             {
                 term_data_started = 1;
-                Serial.println("***** Term Accepted ******");
+                // Serial.println("***** Term Accepted ******");
                 event->id = static_cast<Event_ID_t>(term_id);
             }
         }
@@ -178,12 +249,14 @@ void GSM::executeCallback()
         {
             if (c == '\r')
             {
-                Serial.print(">>>term data:");
-                Serial.println(term_data);
+                // Serial.print(">>>term data:");
+                // Serial.println(term_data);
                 term_started = 0;
                 term_ended = 0;
                 term_length = 0;
                 term_data_started = 0;
+
+                event->message[0] = '\0';
                 if (_eventCallback)
                 {
                     _processTermString(event, term_data, term_data_count);
@@ -191,7 +264,9 @@ void GSM::executeCallback()
                     // Serial.print("event->id: ");
                     // Serial.println(event->id);
                     // Serial.print("event->param1: ");
-                    // Serial.println(event->param1);
+                    // Serial.println(event->message);
+                    
+
 
                     _eventCallback(event); // Execute the callback function with the new random number
                 }
@@ -205,10 +280,10 @@ void GSM::executeCallback()
         }
     }
     free(event);
-    // yield();
+    yield();
 }
 
-bool GSM::bCheckRespose(const int timeout)
+bool GSM::_checkResponse(const int timeout)
 {
     char response[150];                    // Assuming the response won't exceed 50 characters
     memset(response, 0, sizeof(response)); // Initialize response to all zeros
@@ -220,6 +295,7 @@ bool GSM::bCheckRespose(const int timeout)
     bool term_started = false, term_ended = false;
     bool term_data_started = false, term_data_ended = false;
     char term_data[MAX_MSG_SIZE];
+    char term[MAX_TERM_SIZE];
 
     A9G_Event_t *event = NULL;
     event = (A9G_Event_t *)malloc(sizeof(A9G_Event_t));
@@ -230,7 +306,9 @@ bool GSM::bCheckRespose(const int timeout)
         {
             char c = _gsm.read();
             response[idx++] = c;
-            Serial.print(c);
+            // Serial.print(c);
+            // Serial.print("response: ");
+            // Serial.print(response);
 
             if (c == '+' && !term_started && !term_ended)
             {
@@ -244,31 +322,31 @@ bool GSM::bCheckRespose(const int timeout)
             if ((c == '=' || c == ':') && !term_ended)
             {
                 // Serial.println("********** Term Stop!");
-                _term[term_length] = '\0';
+                term[term_length] = '\0';
                 term_ended = 1;
                 continue;
             }
 
             if (term_started && !term_ended)
             {
-                _term[term_length++] = c;
+                term[term_length++] = c;
                 // Serial.print("term: ");
                 // Serial.println(c);
             }
 
             if (term_started && term_ended && !term_data_started)
             {
-                Serial.print(">>>term: ");
-                Serial.println(_term);
+                // Serial.print(">>>term: ");
+                // Serial.println(term);
 
-                int term_id = _checkTermFromString(_term);
+                int term_id = _checkTermFromString(term);
                 // Serial.print("term id: ");
                 // Serial.println(term_id);
 
-                if (term_id == TERM_GPSRD || term_id == TERM_CMGS || term_id == TERM_CMGL || term_id == TERM_CMGR || term_id == TERM_CIEV || term_id == TERM_NONE || term_id == TERM_MAX)
+                if (term_id == TERM_GPSRD || term_id == TERM_CMGS || term_id == TERM_CMGL || term_id == TERM_CIEV || term_id == TERM_NONE || term_id == TERM_MAX)
                 {
                     // Terminate these term here, we will not process these type in this function. for cemplexity issue.
-                    Serial.println("***** Terminating this term here ******");
+                    // Serial.println("***** Terminating this term here ******");
                     term_started = 0;
                     term_ended = 0;
                     term_length = 0;
@@ -277,7 +355,7 @@ bool GSM::bCheckRespose(const int timeout)
                 else
                 {
                     term_data_started = 1;
-                    Serial.println("***** Term Accepted ******");
+                    // Serial.println("***** Term Accepted ******");
                     event->id = static_cast<Event_ID_t>(term_id);
                 }
             }
@@ -285,12 +363,13 @@ bool GSM::bCheckRespose(const int timeout)
             {
                 if (c == '\r')
                 {
-                    Serial.print(">>>term data:");
-                    Serial.println(term_data);
+                    // Serial.print(">>>term data:");
+                    // Serial.println(term_data);
                     term_started = 0;
                     term_ended = 0;
                     term_length = 0;
                     term_data_started = 0;
+                    event->message[0] = '\0';
                     if (_eventCallback)
                     {
                         _processTermString(event, term_data, term_data_count);
@@ -302,6 +381,7 @@ bool GSM::bCheckRespose(const int timeout)
 
                         _eventCallback(event); // Execute the callback function with the new random number
                     }
+
                 }
                 else
                 {
@@ -330,18 +410,20 @@ bool GSM::bCheckRespose(const int timeout)
 bool GSM::bIsReady()
 {
     _gsm.println("AT");
-    if (bCheckRespose(2000))
+    if (_checkResponse(2000))
     {
         if (_debug)
+        {
             Serial.println(F("GSM Ready"));
-        return true;
+            return true;
+        }
     }
     else
         return false;
 }
 
 /**
- * @brief waring!!! blocking function. it will take 15s - 35s.
+ * @brief waring!!! blocking function. it will take 15s to 60s.
  * it's not neccesary to use this function.
  * it will not usefull that much.
  * but it would be good for further move
@@ -361,7 +443,7 @@ bool GSM::waitForReady()
     bool term_started = false, term_ended = false;
     bool term_data_started = false, term_data_ended = false;
     char term_data[MAX_MSG_SIZE];
-
+    char term[MAX_TERM_SIZE];
 
     A9G_Event_t *event = NULL;
     event = (A9G_Event_t *)malloc(sizeof(A9G_Event_t));
@@ -391,31 +473,31 @@ bool GSM::waitForReady()
             if ((c == '=' || c == ':') && !term_ended)
             {
                 // Serial.println("********** Term Stop!");
-                _term[term_length] = '\0';
+                term[term_length] = '\0';
                 term_ended = 1;
                 continue;
             }
 
             if (term_started && !term_ended)
             {
-                _term[term_length++] = c;
+                term[term_length++] = c;
                 // Serial.print("term: ");
                 // Serial.println(c);
             }
 
             if (term_started && term_ended && !term_data_started)
             {
-                Serial.print(">>>term: ");
-                Serial.println(_term);
+                // Serial.print(">>>term: ");
+                // Serial.println(term);
 
-                int term_id = _checkTermFromString(_term);
+                int term_id = _checkTermFromString(term);
                 // Serial.print("term id: ");
                 // Serial.println(term_id);
 
                 if (term_id == TERM_GPSRD || term_id == TERM_CMGS || term_id == TERM_CMGL || term_id == TERM_CMGR || term_id == TERM_CIEV || term_id == TERM_NONE || term_id == TERM_MAX)
                 {
                     // Terminate these term here, we will not process these type in this function. for cemplexity issue.
-                    Serial.println("***** Terminating this term here ******");
+                    // Serial.println("***** Terminating this term here ******");
                     term_started = 0;
                     term_ended = 0;
                     term_length = 0;
@@ -424,7 +506,7 @@ bool GSM::waitForReady()
                 else
                 {
                     term_data_started = 1;
-                    Serial.println("***** Term Accepted ******");
+                    // Serial.println("***** Term Accepted ******");
                     event->id = static_cast<Event_ID_t>(term_id);
                 }
             }
@@ -432,7 +514,7 @@ bool GSM::waitForReady()
             {
                 if (c == '\r')
                 {
-                    Serial.print(">>>term data:");
+                    // Serial.print(">>>term data:");
                     Serial.println(term_data);
                     term_started = 0;
                     term_ended = 0;
@@ -482,7 +564,7 @@ bool GSM::waitForReady()
 bool GSM::IsGPRSAttached()
 {
     _gsm.println("AT+CGATT?");
-    if (bCheckRespose(2000))
+    if (_checkResponse(2000))
     {
         Serial.println(F("GPRS Attached"));
         return true;
@@ -497,7 +579,7 @@ bool GSM::IsGPRSAttached()
 bool GSM::AttachToGPRS()
 {
     _gsm.println("AT+CGATT=1");
-    if (bCheckRespose(2000))
+    if (_checkResponse(2000))
     {
         Serial.println(F("Attach to GPRS Success"));
         return true;
@@ -509,7 +591,7 @@ bool GSM::AttachToGPRS()
 bool GSM::DetachToGPRS()
 {
     _gsm.println("AT+CGATT=0");
-    if (bCheckRespose(2000))
+    if (_checkResponse(2000))
     {
         Serial.println(F("Detach to GPRS Success"));
         return true;
@@ -526,7 +608,7 @@ bool GSM::SetAPN(const char pdp_type[], const char apn[])
     _gsm.print(apn);
     _gsm.println("\"");
 
-    if (bCheckRespose(2000))
+    if (_checkResponse(2000))
     {
         Serial.println(F("APN Set success"));
         return true;
@@ -538,7 +620,7 @@ bool GSM::SetAPN(const char pdp_type[], const char apn[])
 bool GSM::ActivatePDP()
 {
     _gsm.println("AT+CGACT=1,1");
-    if (bCheckRespose(2000))
+    if (_checkResponse(2000))
     {
         Serial.println(F("PDP Activate success"));
         return true;
@@ -560,7 +642,7 @@ bool GSM::ConnectToBroker(const char broker[], int port, const char id[], uint8_
     _gsm.print(",");
     _gsm.println(clean_session);
 
-    if (bCheckRespose(2000))
+    if (_checkResponse(2000))
     {
         Serial.println(F("Connected To Broker"));
         return true;
@@ -584,7 +666,7 @@ bool GSM::ConnectToBroker(const char broker[], int port)
     _gsm.print(",");
     _gsm.println(0);
 
-    if (bCheckRespose(2000))
+    if (_checkResponse(2000))
     {
         Serial.println(F("Connected To Broker"));
         return true;
@@ -596,7 +678,7 @@ bool GSM::ConnectToBroker(const char broker[], int port)
 bool GSM::DisconnectBroker()
 {
     _gsm.println("AT+MQTTDISCONN");
-    if (bCheckRespose(2000))
+    if (_checkResponse(2000))
     {
         Serial.println(F("MQTT Disconnected From Broker"));
         return true;
@@ -613,7 +695,7 @@ bool GSM::SubscribeToTopic(const char topic[], uint8_t qos, unsigned long timeou
     _gsm.print(",");
     _gsm.println(timeout);
 
-    if (bCheckRespose(2000))
+    if (_checkResponse(2000))
     {
         Serial.printf("Subscribe To Topic:\"%s\"  success\n", topic);
         return true;
@@ -630,7 +712,7 @@ bool GSM::SubscribeToTopic(const char topic[])
     _gsm.print(",");
     _gsm.println(0);
 
-    if (bCheckRespose(2000))
+    if (_checkResponse(2000))
     {
         Serial.printf("Subscribe To Topic:\"%s\"  success\n", topic);
         return true;
@@ -644,7 +726,7 @@ bool GSM::UnsubscribeToTopic(const char topic[])
     _gsm.print("AT+MQTTUNSUB=\"");
     _gsm.print(topic);
     _gsm.println("\"");
-    if (bCheckRespose(2000))
+    if (_checkResponse(2000))
     {
         Serial.printf("Unsubscribe To Topic:\"%s\"  success\n", topic);
         return true;
@@ -653,26 +735,7 @@ bool GSM::UnsubscribeToTopic(const char topic[])
         return false;
 }
 
-// bool GSM::PublishToTopic(const char *topic, uint8_t qos, uint8_t retain, uint8_t dup, const char *msg, uint16_t msg_len, unsigned long timeout){
-// AT+MQTTPUB="<topic>",<qos>,<retain>,<dup>,"<message>",<message_len>,<timeout>: Publish a message to an MQTT topic.
-// _gsm.print("AT+MQTTPUB=\"");
-//     _gsm.print(topic);
-//     _gsm.print("\",\"");
-//     _gsm.print(msg);
-//     _gsm.print("\",");
-//     _gsm.print("2");
-//     _gsm.print(",");
-//     _gsm.print(msg_len);
-//     _gsm.print(",");
-//     _gsm.println(timeout);
 
-//     if (bCheckRespose(2000))
-//     {
-//         return true;
-//     }
-//     else
-//         return false;
-// }
 bool GSM::PublishToTopic(const char topic[], const char msg[])
 {
     _gsm.print("AT+MQTTPUB=\"");
@@ -681,13 +744,93 @@ bool GSM::PublishToTopic(const char topic[], const char msg[])
     _gsm.print(msg);
     _gsm.println("\",2,0,0");
 
-    if (bCheckRespose(2000))
+    if (_checkResponse(2000))
     {
         return true;
     }
     else
         return false;
 }
+
+
+
+
+
+
+bool GSM::ActivateTE()
+{
+    _gsm.println(F("AT+CNMI=0,1,0,0,0"));
+    if (_checkResponse(2000))
+    {
+        return true;
+    }
+    else
+        return false;
+}
+
+bool GSM::SetFormatReading(bool mode)
+{
+    _gsm.print(F("AT+CMGF="));
+    _gsm.println(mode);
+    if (_checkResponse(2000))
+    {
+        return true;
+    }
+    else
+        return false;
+}
+
+bool GSM::SetMessageStorageUnit()
+{
+    _gsm.println(F("AT+CPMS=\"ME\",\"ME\",\"ME\""));
+    if (_checkResponse(2000))
+    {
+        return true;
+    }
+    else
+        return false;
+}
+
+void GSM::CheckMessageStorageUnit(){
+    _gsm.println(F("AT+CPBS?"));
+}
+
+
+void GSM::ReadMessage(uint8_t index){
+    _gsm.print("AT+CMGR=");
+    _gsm.println(index);
+}
+
+void GSM::DeleteMessage(uint8_t index,Message_Type_t type){
+    _gsm.print(F("AT+CMGD="));
+    _gsm.print(index);
+    _gsm.print(F(","));
+    _gsm.println(type);
+}
+
+bool GSM::SendMessage(const char number[], const char message[])
+{
+    _gsm.print(F("AT+CMGS=\""));
+    _gsm.print(number);
+    _gsm.print(F("\"\r"));
+    _gsm.print(message);
+    _gsm.println((char)26);
+    if(_checkResponse(2000)){
+        return true;
+    }
+    else{
+        return false;
+    }
+}
+
+/*
+
++CIEV: +CIEV,"MESSAGE",1
++CMTI: +CMTI,"ME",17
+
+*/
+
+
 
 void GSM::errorPrintCME(int ret)
 {
