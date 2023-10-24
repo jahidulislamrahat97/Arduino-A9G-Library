@@ -9,8 +9,9 @@ typedef enum Event_ID_t
     EVENT_CIEV, // call
     EVENT_CPMS,
     EVENT_CMT,
+    EVENT_CMTI,
     EVENT_CMGL,
-    EVENT_CMGR,
+    EVENT_NEW_SMS_RECEIVED, //TERM_CMGR,
     EVENT_GPSRD,
     EVENT_CGATT,
     EVENT_AGPS,
@@ -112,12 +113,19 @@ typedef enum CMS_Error_t
     CMS_ERROR_MAX
 } CMS_Error_t;
 
+typedef enum Message_Type_t
+{
+    READ_MESSAGE = 1,
+    UNREAD_MESSAGE = 2,
+    ALL_MESSAGE = 4
+} Message_Type_t;
 typedef struct A9G_Event_t{
     Event_ID_t id;
     int error;
     char message[100];
     char topic[50];
     char number[16];
+    char date_time[25];
     char param1[10];
     char param2[30];
     char param3[50];
