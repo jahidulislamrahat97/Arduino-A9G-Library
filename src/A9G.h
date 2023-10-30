@@ -76,11 +76,12 @@ private:
         TERM_CMGS,
         TERM_CME,
         TERM_CMS,
+        TERM_CSQ,
         TERM_MAX,
         TERM_NONE
     } Term_List_t;
 
-    const char _terms_string[20][15] = {"CREG", "CTZV", "CIEV", "CPMS", "CMT", "CMTI", "CMGL", "CMGR", "GPSRD", "CGATT", "AGPS", "GPNT", "MQTTPUBLISH", "CMGS", "CME ERROR", "CMS ERROR"};
+    const char _terms_string[25][15] = {"CREG", "CTZV", "CIEV", "CPMS", "CMT", "CMTI", "CMGL", "CMGR", "GPSRD", "CGATT", "AGPS", "GPNT", "MQTTPUBLISH", "CMGS", "CME ERROR", "CMS ERROR", "CSQ"};
 
     /**
      * @brief Check if a given string corresponds to a known term.
@@ -148,7 +149,7 @@ public:
     void errorPrintCMS(int ret);
 
     /*###############################################*/
-    /*********************  BASIC *********************/
+    /*********************  BASIC ********************/
     /*###############################################*/
 
     /**
@@ -176,7 +177,14 @@ public:
      */
     void ReadIMEI();
 
-    // GPRS Commands
+    void ReadCSQ();
+
+    
+
+    
+    /*###############################################*/
+    /*********************  GPRS *********************/
+    /*###############################################*/
 
     /**
      * @brief Checks if the GSM module is attached to GPRS (General Packet Radio Service).

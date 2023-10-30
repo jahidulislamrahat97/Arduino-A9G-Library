@@ -178,6 +178,20 @@ void GSM::_processTermString(A9G_Event_t *event, const char data[], int data_len
         // Serial.println(event->date_time);
 
     }
+    else if(event->id == EVENT_CSQ){
+        char buffer[10] = "\0";
+        for(int i = 0; i<=data_len; i++){
+            if(data[i] == ','){
+                buffer[i] = '\0';
+                break;
+            }
+            else{
+                buffer[i] = data[i];
+            }
+
+        }
+        event->param1 =atoi(buffer);
+    }
 }
 
 void GSM::executeCallback()
@@ -310,8 +324,6 @@ bool GSM::_checkResponse(const int timeout)
             char c = _gsm.read();
             response[idx++] = c;
             // Serial.print(c);
-            // Serial.print("response: ");
-            // Serial.print(response);
 
             if (c == '+' && !term_started && !term_ended)
             {
@@ -339,7 +351,7 @@ bool GSM::_checkResponse(const int timeout)
 
             if (term_started && term_ended && !term_data_started)
             {
-                // Serial.print(">>>term: ");
+                // Serial.print(">>>term:");
                 // Serial.println(term);
 
                 int term_id = _checkTermFromString(term);
@@ -553,6 +565,19 @@ bool GSM::waitForReady()
     }
 
     return false;
+}
+
+// AT+CSQ: Check signal strength (in dBm).
+// AT+CCID: Read the ICCID (Integrated Circuit Card Identifier) of the SIM card.
+
+void GSM::ReadIMEI(){
+    _gsm.println("AT+CGSN");
+    _checkResponse(1000);
+}
+
+void GSM::ReadCSQ(){
+    _gsm.println("AT+CSQ");
+    _checkResponse(1000);
 }
 
 bool GSM::IsGPRSAttached()
@@ -1058,6 +1083,256 @@ void GSM::errorPrintCME(int ret)
         break;
     case SIM_PROFILE_ERROR:
         Serial.printf("SIM_PROFILE_ERROR\n");
+        break;
+    default:
+        break;
+    }
+}
+
+void GSM::errorPrintCMS(int ret)
+{
+
+    switch (ret)
+    {
+    case UNASSIGNED_NUM:
+        Serial.printf("UNASSIGNED_NUM\n");
+        break;
+    case OPER_DETERM_BARR:
+        Serial.printf("OPER_DETERM_BARR\n");
+        break;
+    case CALL_BARRED:
+        Serial.printf("CALL_BARRED\n");
+        break;
+    case SM_TRANS_REJE:
+        Serial.printf("SM_TRANS_REJE\n");
+        break;
+    case DEST_OOS:
+        Serial.printf("DEST_OOS\n");
+        break;
+    case UNINDENT_SUB:
+        Serial.printf("UNINDENT_SUB\n");
+        break;
+    case FACILIT_REJE:
+        Serial.printf("FACILIT_REJE\n");
+        break;
+    case UNKONWN_SUB:
+        Serial.printf("UNKONWN_SUB\n");
+        break;
+    case NW_OOO:
+        Serial.printf("NW_OOO\n");
+        break;
+    case TMEP_FAIL:
+        Serial.printf("TMEP_FAIL\n");
+        break;
+    case CONGESTION:
+        Serial.printf("CONGESTION\n");
+        break;
+    case RES_UNAVAILABLE:
+        Serial.printf("RES_UNAVAILABLE\n");
+        break;
+    case REQ_FAC_NOT_SUB:
+        Serial.printf("REQ_FAC_NOT_SUB\n");
+        break;
+    case RFQ_FAC_NOT_IMP:
+        Serial.printf("RFQ_FAC_NOT_IMP\n");
+        break;
+    case INVALID_SM_TRV:
+        Serial.printf("INVALID_SM_TRV\n");
+        break;
+    case INVALID_MSG:
+        Serial.printf("INVALID_MSG\n");
+        break;
+    case INVALID_MAND_INFO:
+        Serial.printf("INVALID_MAND_INFO\n");
+        break;
+    case MSG_TYPE_ERROR:
+        Serial.printf("MSG_TYPE_ERROR\n");
+        break;
+    case MSG_NOT_COMP:
+        Serial.printf("MSG_NOT_COMP\n");
+        break;
+    case INFO_ELEMENT_ERROR:
+        Serial.printf("INFO_ELEMENT_ERROR\n");
+        break;
+    case PROT_ERROR:
+        Serial.printf("PROT_ERROR\n");
+        break;
+    case IW_UNSPEC:
+        Serial.printf("IW_UNSPEC\n");
+        break;
+    case TEL_IW_NOT_SUPP:
+        Serial.printf("TEL_IW_NOT_SUPP\n");
+        break;
+    case SMS_TYPE0_NOT_SUPP:
+        Serial.printf("SMS_TYPE0_NOT_SUPP\n");
+        break;
+    case CANNOT_REP_SMS:
+        Serial.printf("CANNOT_REP_SMS\n");
+        break;
+    case UNSPEC_TP_ERROR:
+        Serial.printf("UNSPEC_TP_ERROR\n");
+        break;
+    case DCS_NOT_SUPP:
+        Serial.printf("DCS_NOT_SUPP\n");
+        break;
+    case MSG_CLASS_NOT_SUPP:
+        Serial.printf("MSG_CLASS_NOT_SUPP\n");
+        break;
+    case UNSPEC_TD_ERROR:
+        Serial.printf("UNSPEC_TD_ERROR\n");
+        break;
+    case CMD_CANNOT_ACT:
+        Serial.printf("CMD_CANNOT_ACT\n");
+        break;
+    case CMD_UNSUPP:
+        Serial.printf("CMD_UNSUPP\n");
+        break;
+    case UNSPEC_TC_ERROR:
+        Serial.printf("UNSPEC_TC_ERROR\n");
+        break;
+    case TPDU_NOT_SUPP:
+        Serial.printf("TPDU_NOT_SUPP\n");
+        break;
+    case SC_BUSY:
+        Serial.printf("SC_BUSY\n");
+        break;
+    case NO_SC_SUB:
+        Serial.printf("NO_SC_SUB\n");
+        break;
+    case SC_SYS_FAIL:
+        Serial.printf("SC_SYS_FAIL\n");
+        break;
+    case INVALID_SME_ADDR:
+        Serial.printf("INVALID_SME_ADDR\n");
+        break;
+    case DEST_SME_BARR:
+        Serial.printf("DEST_SME_BARR\n");
+        break;
+    case SM_RD_SM:
+        Serial.printf("SM_RD_SM\n");
+        break;
+    case TP_VPF_NOT_SUPP:
+        Serial.printf("TP_VPF_NOT_SUPP\n");
+        break;
+    case TP_VP_NOT_SUPP:
+        Serial.printf("TP_VP_NOT_SUPP\n");
+        break;
+    case D0_SIM_SMS_STO_FULL:
+        Serial.printf("D0_SIM_SMS_STO_FULL\n");
+        break;
+    case NO_SMS_STO_IN_SIM:
+        Serial.printf("NO_SMS_STO_IN_SIM\n");
+        break;
+    case ERR_IN_MS:
+        Serial.printf("ERR_IN_MS\n");
+        break;
+    case MEM_CAP_EXCCEEDED:
+        Serial.printf("MEM_CAP_EXCCEEDED\n");
+        break;
+    case SIM_APP_TK_BUSY:
+        Serial.printf("SIM_APP_TK_BUSY\n");
+        break;
+    case SIM_DATA_DL_ERROR:
+        Serial.printf("SIM_DATA_DL_ERROR\n");
+        break;
+    case UNSPEC_ERRO_CAUSE:
+        Serial.printf("UNSPEC_ERRO_CAUSE\n");
+        break;
+    case ME_FAIL:
+        Serial.printf("ME_FAIL\n");
+        break;
+    case SMS_SERVIEC_RESERVED:
+        Serial.printf("SMS_SERVIEC_RESERVED\n");
+        break;
+    case OPER_NOT_SUPP:
+        Serial.printf("OPER_NOT_SUPP\n");
+        break;
+    case INVALID_PDU_PARAM:
+        Serial.printf("INVALID_PDU_PARAM\n");
+        break;
+    case INVALID_TXT_PARAM:
+        Serial.printf("INVALID_TXT_PARAM\n");
+        break;
+    case SIM_NOT_INSERT:
+        Serial.printf("SIM_NOT_INSERT\n");
+        break;
+    case CMS_SIM_PIN_REQUIRED:
+        Serial.printf("SIM_PIN_REQUIRED\n");
+        break;
+    case PH_SIM_PIN_REQUIRED:
+        Serial.printf("PH_SIM_PIN_REQUIRED\n");
+        break;
+    case SIM_FAIL:
+        Serial.printf("SIM_FAIL\n");
+        break;
+    case CMS_SIM_BUSY:
+        Serial.printf("SIM_BUSY\n");
+        break;
+    case CMS_SIM_WRONG:
+        Serial.printf("SIM_WRONG\n");
+        break;
+    case CMS_SIM_PUK_REQUIRED:
+        Serial.printf("SIM_PUK_REQUIRED\n");
+        break;
+    case CMS_SIM_PIN2_REQUIRED:
+        Serial.printf("SIM_PIN2_REQUIRED\n");
+        break;
+    case CMS_SIM_PUK2_REQUIRED:
+        Serial.printf("SIM_PUK2_REQUIRED\n");
+        break;
+    case MEM_FAIL:
+        Serial.printf("MEM_FAIL\n");
+        break;
+    case INVALID_MEM_INDEX:
+        Serial.printf("INVALID_MEM_INDEX\n");
+        break;
+    case MEM_FULL:
+        Serial.printf("MEM_FULL\n");
+        break;
+    case SCA_ADDR_UNKNOWN:
+        Serial.printf("SCA_ADDR_UNKNOWN\n");
+        break;
+    case NO_NW_SERVICE:
+        Serial.printf("NO_NW_SERVICE\n");
+        break;
+    case NW_TIMEOUT:
+        Serial.printf("NW_TIMEOUT\n");
+        break;
+    case NO_CNMA_ACK_EXPECTED:
+        Serial.printf("NO_CNMA_ACK_EXPECTED\n");
+        break;
+    case UNKNOWN_ERROR:
+        Serial.printf("UNKNOWN_ERROR\n");
+        break;
+    case USER_ABORT:
+        Serial.printf("USER_ABORT\n");
+        break;
+    case UNABLE_TO_STORE:
+        Serial.printf("UNABLE_TO_STORE\n");
+        break;
+    case INVALID_STATUS:
+        Serial.printf("INVALID_STATUS\n");
+        break;
+    case INVALID_ADDR_CHAR:
+        Serial.printf("INVALID_ADDR_CHAR\n");
+        break;
+    case INVALID_LEN:
+        Serial.printf("INVALID_LEN\n");
+        break;
+    case INVALID_PDU_CHAR:
+        Serial.printf("INVALID_PDU_CHAR\n");
+        break;
+    case INVALID_PARA:
+        Serial.printf("INVALID_PARA\n");
+        break;
+    case INVALID_LEN_OR_CHAR:
+        Serial.printf("INVALID_LEN_OR_CHAR\n");
+        break;
+    case INVALID_TXT_CHAR:
+        Serial.printf("INVALID_TXT_CHAR\n");
+        break;
+    case TIMER_EXPIRED:
+        Serial.printf("TIMER_EXPIRED\n");
         break;
     default:
         break;

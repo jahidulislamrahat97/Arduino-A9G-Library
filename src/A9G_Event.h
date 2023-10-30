@@ -11,7 +11,7 @@ typedef enum Event_ID_t
     EVENT_CMT,
     EVENT_CMTI,
     EVENT_CMGL,
-    EVENT_NEW_SMS_RECEIVED, //TERM_CMGR,
+    EVENT_NEW_SMS_RECEIVED, // TERM_CMGR,
     EVENT_GPSRD,
     EVENT_CGATT,
     EVENT_AGPS,
@@ -20,7 +20,9 @@ typedef enum Event_ID_t
     EVENT_CMGS,
     EVENT_CME,
     EVENT_CMS,
+    EVENT_CSQ,
     EVENT_MAX,
+    EVENT_NONE
 } Event_ID_t;
 
 typedef enum CME_Error_t
@@ -109,7 +111,88 @@ typedef enum CME_Error_t
 
 typedef enum CMS_Error_t
 {
-    CMS_ERROR_NONE = 0,
+    UNASSIGNED_NUM = 1,
+    OPER_DETERM_BARR = 8,
+    CALL_BARRED = 10,
+    SM_TRANS_REJE = 21,
+    DEST_OOS = 27,
+    UNINDENT_SUB,
+    FACILIT_REJE,
+    UNKONWN_SUB,
+    NW_OOO = 38,
+    TMEP_FAIL = 41,
+    CONGESTION,
+    RES_UNAVAILABLE = 47,
+    REQ_FAC_NOT_SUB = 50,
+    RFQ_FAC_NOT_IMP = 69,
+    INVALID_SM_TRV = 81,
+    INVALID_MSG = 95,
+    INVALID_MAND_INFO,
+    MSG_TYPE_ERROR,
+    MSG_NOT_COMP,
+    INFO_ELEMENT_ERROR,
+    PROT_ERROR = 111,
+    IW_UNSPEC = 127,
+    TEL_IW_NOT_SUPP,
+    SMS_TYPE0_NOT_SUPP,
+    CANNOT_REP_SMS,
+    UNSPEC_TP_ERROR = 143,
+    DCS_NOT_SUPP,
+    MSG_CLASS_NOT_SUPP,
+    UNSPEC_TD_ERROR = 159,
+    CMD_CANNOT_ACT,
+    CMD_UNSUPP,
+    UNSPEC_TC_ERROR = 175,
+    TPDU_NOT_SUPP,
+    SC_BUSY = 192,
+    NO_SC_SUB,
+    SC_SYS_FAIL,
+    INVALID_SME_ADDR,
+    DEST_SME_BARR,
+    SM_RD_SM,
+    TP_VPF_NOT_SUPP,
+    TP_VP_NOT_SUPP,
+    D0_SIM_SMS_STO_FULL = 208,
+    NO_SMS_STO_IN_SIM,
+    ERR_IN_MS,
+    MEM_CAP_EXCCEEDED,
+    SIM_APP_TK_BUSY,
+    SIM_DATA_DL_ERROR,
+    UNSPEC_ERRO_CAUSE = 255,
+    ME_FAIL = 300,
+    SMS_SERVIEC_RESERVED,
+    OPER_NOT_ALLOWED,
+    OPER_NOT_SUPP,
+    INVALID_PDU_PARAM,
+    INVALID_TXT_PARAM,
+    SIM_NOT_INSERT = 310,
+    CMS_SIM_PIN_REQUIRED,
+    PH_SIM_PIN_REQUIRED,
+    SIM_FAIL,
+    CMS_SIM_BUSY,
+    CMS_SIM_WRONG,
+    CMS_SIM_PUK_REQUIRED,
+    CMS_SIM_PIN2_REQUIRED,
+    CMS_SIM_PUK2_REQUIRED,
+    MEM_FAIL = 320,
+    INVALID_MEM_INDEX,
+    MEM_FULL,
+    SCA_ADDR_UNKNOWN = 330,
+    NO_NW_SERVICE,
+    NW_TIMEOUT,
+    NO_CNMA_ACK_EXPECTED = 340,
+    UNKNOWN_ERROR = 500,
+    USER_ABORT = 512,
+    UNABLE_TO_STORE,
+    INVALID_STATUS,
+    INVALID_ADDR_CHAR,
+    INVALID_LEN,
+    INVALID_PDU_CHAR,
+    INVALID_PARA,
+    INVALID_LEN_OR_CHAR,
+    INVALID_TXT_CHAR,
+    TIMER_EXPIRED = 521,
+    CMS_ERROR_NONE,
     CMS_ERROR_MAX
 } CMS_Error_t;
 
@@ -119,14 +202,15 @@ typedef enum Message_Type_t
     UNREAD_MESSAGE = 2,
     ALL_MESSAGE = 4
 } Message_Type_t;
-typedef struct A9G_Event_t{
+typedef struct A9G_Event_t
+{
     Event_ID_t id;
     int error;
     char message[100];
     char topic[50];
     char number[16];
     char date_time[25];
-    char param1[10];
+    int param1;
     char param2[30];
     char param3[50];
 } A9G_Event_t;
