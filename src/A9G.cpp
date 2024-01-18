@@ -60,13 +60,13 @@ uint8_t GSM::_checkTermFromString(const char *term_str)
 
 void GSM::_processTermString(A9G_Event_t *event, const char data[], int data_len)
 {
-    // Serial.println(" IN _processTermString: ");
-    // Serial.print("event->id: ");
-    // Serial.println(event->id);
-    // Serial.print("data: ");
-    // Serial.println(data);
-    // Serial.print("data_len: ");
-    // Serial.println(data_len);
+    Serial.println(" IN _processTermString: ");
+    Serial.print("event->id: ");
+    Serial.println(event->id);
+    Serial.print("data: ");
+    Serial.println(data);
+    Serial.print("data_len: ");
+    Serial.println(data_len);
 
     uint8_t comma_count = 0;
     uint8_t message_count = 0;
@@ -191,6 +191,12 @@ void GSM::_processTermString(A9G_Event_t *event, const char data[], int data_len
 
         }
         event->param1 =atoi(buffer);
+    }
+    else if(event->id == EVENT_IMEI){
+        strcpy(event->param2,data);
+    }
+    else if(event->id == EVENT_CCID){
+        strcpy(event->param2,data);
     }
 }
 
@@ -323,7 +329,7 @@ bool GSM::_checkResponse(const int timeout)
         {
             char c = _gsm.read();
             response[idx++] = c;
-            // Serial.print(c);
+            Serial.print(c);
 
             if (c == '+' && !term_started && !term_ended)
             {
@@ -334,9 +340,9 @@ bool GSM::_checkResponse(const int timeout)
                 continue;
             }
 
-            if ((c == '=' || c == ':') && !term_ended)
+            if ((c == ':') && !term_ended)
             {
-                // Serial.println("********** Term Stop!");
+                Serial.println("********** Term Stop!");
                 term[term_length] = '\0';
                 term_ended = 1;
                 continue;
@@ -344,19 +350,29 @@ bool GSM::_checkResponse(const int timeout)
 
             if (term_started && !term_ended)
             {
-                term[term_length++] = c;
+                if (c == '\r')
+                {
+                    term_started = 0;
+                    term_length = 0;
+                }
+                else
+                {
+                    term[term_length++] = c;
+                }
+
                 // Serial.print("term: ");
                 // Serial.println(c);
             }
 
             if (term_started && term_ended && !term_data_started)
             {
-                // Serial.print(">>>term:");
-                // Serial.println(term);
+                Serial.print(">>>term: \"");
+                Serial.print(term);
+                Serial.println("\"");
 
                 int term_id = _checkTermFromString(term);
-                // Serial.print("term id: ");
-                // Serial.println(term_id);
+                Serial.print("term id: ");
+                Serial.println(term_id);
 
                 if (term_id == TERM_GPSRD || term_id == TERM_CMGS || term_id == TERM_CMGL || term_id == TERM_CIEV || term_id == TERM_NONE || term_id == TERM_MAX)
                 {
@@ -378,8 +394,8 @@ bool GSM::_checkResponse(const int timeout)
             {
                 if (c == '\r')
                 {
-                    // Serial.print(">>>term data:");
-                    // Serial.println(term_data);
+                    Serial.print(">>>term data:");
+                    Serial.println(term_data);
                     term_started = 0;
                     term_ended = 0;
                     term_length = 0;
@@ -476,7 +492,7 @@ bool GSM::waitForReady()
                 continue;
             }
 
-            if ((c == '=' || c == ':') && !term_ended)
+            if ((c == ':') && !term_ended)
             {
                 // Serial.println("********** Term Stop!");
                 term[term_length] = '\0';
@@ -486,7 +502,15 @@ bool GSM::waitForReady()
 
             if (term_started && !term_ended)
             {
-                term[term_length++] = c;
+                if (c == '\r')
+                {
+                    term_started = 0;
+                    term_length = 0;
+                }
+                else
+                {
+                    term[term_length++] = c;
+                }
                 // Serial.print("term: ");
                 // Serial.println(c);
             }
@@ -571,12 +595,20 @@ bool GSM::waitForReady()
 // AT+CCID: Read the ICCID (Integrated Circuit Card Identifier) of the SIM card.
 
 void GSM::ReadIMEI(){
-    _gsm.println("AT+CGSN");
+    _gsm.println("AT+EGMR=2,7");
     _checkResponse(1000);
 }
-
+/**
+ * @brief 
+ * @todo need to implement: issue.
+ * 
+ */
 void GSM::ReadCSQ(){
     _gsm.println("AT+CSQ");
+    _checkResponse(1000);
+}
+void GSM::ReadCCID(){
+    _gsm.println("AT+CCID");
     _checkResponse(1000);
 }
 

@@ -21,6 +21,8 @@ typedef enum Event_ID_t
     EVENT_CME,
     EVENT_CMS,
     EVENT_CSQ,
+    EVENT_IMEI,
+    EVENT_CCID,
     EVENT_MAX,
     EVENT_NONE
 } Event_ID_t;

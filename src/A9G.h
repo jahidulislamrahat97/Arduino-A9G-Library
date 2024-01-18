@@ -77,11 +77,13 @@ private:
         TERM_CME,
         TERM_CMS,
         TERM_CSQ,
+        TERM_EGMR,
+        TERM_CCID,
         TERM_MAX,
         TERM_NONE
     } Term_List_t;
 
-    const char _terms_string[25][15] = {"CREG", "CTZV", "CIEV", "CPMS", "CMT", "CMTI", "CMGL", "CMGR", "GPSRD", "CGATT", "AGPS", "GPNT", "MQTTPUBLISH", "CMGS", "CME ERROR", "CMS ERROR", "CSQ"};
+    const char _terms_string[25][15] = {"CREG", "CTZV", "CIEV", "CPMS", "CMT", "CMTI", "CMGL", "CMGR", "GPSRD", "CGATT", "AGPS", "GPNT", "MQTTPUBLISH", "CMGS", "CME ERROR", "CMS ERROR", "CSQ","EGMR","CCID"};
 
     /**
      * @brief Check if a given string corresponds to a known term.
@@ -178,6 +180,7 @@ public:
     void ReadIMEI();
 
     void ReadCSQ();
+    void ReadCCID();
 
     
 
