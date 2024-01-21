@@ -30,15 +30,27 @@
 
 #include "A9G.h"
 
-GSM::GSM(HardwareSerial &A9G, bool debug)
-    : _gsm(A9G), _debug(debug), _maxWaitTimeMS(MAX_WAIT_TIME_MS)
+GSM::GSM(bool debug)
+    : _debug(debug), _maxWaitTimeMS(MAX_WAIT_TIME_MS)
 {
 
 }
 
-void GSM::init(uint32_t baudRate)
+void GSM::init(Stream *gsm)
 {
-    _gsm.begin(baudRate);
+    _gsm = gsm;
+}
+
+void GSM::Test(char *data)
+{
+    _gsm->println(data);
+    while (1)
+    {
+        while (_gsm->available())
+        {
+            Serial.write(_gsm->read());
+        }
+    }
 }
 
 void GSM::EventDispatch(EventDispatchCallback eventCallback)
@@ -125,8 +137,8 @@ void GSM::_processTermString(A9G_Event_t *event, const char data[], int data_len
         int j =0;
         bool sms = 0;
        
-        while(_gsm.available()){
-            char c = _gsm.read();
+        while(_gsm->available()){
+            char c = _gsm->read();
             
             if(c=='\n'){
                 sms = 1;
@@ -213,9 +225,9 @@ void GSM::executeCallback()
     A9G_Event_t *event = NULL;
     event = (A9G_Event_t *)malloc(sizeof(A9G_Event_t));
 
-    while (_gsm.available())
+    while (_gsm->available())
     {
-        char c = _gsm.read();
+        char c = _gsm->read();
         // Serial.print(c);
 
         if (c == '+' && !term_started && !term_ended)
@@ -325,9 +337,9 @@ bool GSM::_checkResponse(const int timeout)
 
     while ((millis() - start_time) < timeout)
     {
-        while (_gsm.available())
+        while (_gsm->available())
         {
-            char c = _gsm.read();
+            char c = _gsm->read();
             response[idx++] = c;
             Serial.print(c);
 
@@ -440,7 +452,7 @@ bool GSM::_checkResponse(const int timeout)
 
 bool GSM::bIsReady()
 {
-    _gsm.println("AT");
+    _gsm->println("AT");
     if (_checkResponse(2000))
     {
         if (_debug)
@@ -471,16 +483,17 @@ bool GSM::waitForReady()
     event = (A9G_Event_t *)malloc(sizeof(A9G_Event_t));
 
 
-    _gsm.println("AT");
+    _gsm->println("AT");
 
     // need make this function break until it gets ready command
     while (1)
     {
-        while (_gsm.available())
+        while (_gsm->available())
         {
-            char c = _gsm.read();
+            char c = _gsm->read();
             responseBuffer[index++] = c;
             // Serial.print(responseBuffer);
+            Serial.write(c);
 
 
             if (c == '+' && !term_started && !term_ended)
@@ -595,7 +608,7 @@ bool GSM::waitForReady()
 // AT+CCID: Read the ICCID (Integrated Circuit Card Identifier) of the SIM card.
 
 void GSM::ReadIMEI(){
-    _gsm.println("AT+EGMR=2,7");
+    _gsm->println("AT+EGMR=2,7");
     _checkResponse(1000);
 }
 /**
@@ -604,17 +617,17 @@ void GSM::ReadIMEI(){
  * 
  */
 void GSM::ReadCSQ(){
-    _gsm.println("AT+CSQ");
+    _gsm->println("AT+CSQ");
     _checkResponse(1000);
 }
 void GSM::ReadCCID(){
-    _gsm.println("AT+CCID");
+    _gsm->println("AT+CCID");
     _checkResponse(1000);
 }
 
 bool GSM::IsGPRSAttached()
 {
-    _gsm.println("AT+CGATT?");
+    _gsm->println("AT+CGATT?");
     if (_checkResponse(2000))
     {
         Serial.println(F("GPRS Attached"));
@@ -629,7 +642,7 @@ bool GSM::IsGPRSAttached()
 
 bool GSM::AttachToGPRS()
 {
-    _gsm.println("AT+CGATT=1");
+    _gsm->println("AT+CGATT=1");
     if (_checkResponse(2000))
     {
         Serial.println(F("Attach to GPRS Success"));
@@ -641,7 +654,7 @@ bool GSM::AttachToGPRS()
 
 bool GSM::DetachToGPRS()
 {
-    _gsm.println("AT+CGATT=0");
+    _gsm->println("AT+CGATT=0");
     if (_checkResponse(2000))
     {
         Serial.println(F("Detach to GPRS Success"));
@@ -653,11 +666,11 @@ bool GSM::DetachToGPRS()
 
 bool GSM::SetAPN(const char pdp_type[], const char apn[])
 {
-    _gsm.print("AT+CGDCONT=1,\"");
-    _gsm.print(pdp_type);
-    _gsm.print("\",\"");
-    _gsm.print(apn);
-    _gsm.println("\"");
+    _gsm->print("AT+CGDCONT=1,\"");
+    _gsm->print(pdp_type);
+    _gsm->print("\",\"");
+    _gsm->print(apn);
+    _gsm->println("\"");
 
     if (_checkResponse(2000))
     {
@@ -670,7 +683,7 @@ bool GSM::SetAPN(const char pdp_type[], const char apn[])
 
 bool GSM::ActivatePDP()
 {
-    _gsm.println("AT+CGACT=1,1");
+    _gsm->println("AT+CGACT=1,1");
     if (_checkResponse(2000))
     {
         Serial.println(F("PDP Activate success"));
@@ -682,16 +695,16 @@ bool GSM::ActivatePDP()
 
 bool GSM::ConnectToBroker(const char broker[], int port, const char id[], uint8_t keep_alive, uint16_t clean_session)
 {
-    _gsm.print("AT+MQTTCONN=\"");
-    _gsm.print(broker);
-    _gsm.print("\",");
-    _gsm.print(port);
-    _gsm.print(",\"");
-    _gsm.print(id);
-    _gsm.print("\",");
-    _gsm.print(keep_alive);
-    _gsm.print(",");
-    _gsm.println(clean_session);
+    _gsm->print("AT+MQTTCONN=\"");
+    _gsm->print(broker);
+    _gsm->print("\",");
+    _gsm->print(port);
+    _gsm->print(",\"");
+    _gsm->print(id);
+    _gsm->print("\",");
+    _gsm->print(keep_alive);
+    _gsm->print(",");
+    _gsm->println(clean_session);
 
     if (_checkResponse(2000))
     {
@@ -706,16 +719,16 @@ bool GSM::ConnectToBroker(const char broker[], int port)
 {
     char id[10] = "\0";
     sprintf(id, "%d", random(10000, 100000));
-    _gsm.print("AT+MQTTCONN=\"");
-    _gsm.print(broker);
-    _gsm.print("\",");
-    _gsm.print(port);
-    _gsm.print(",\"");
-    _gsm.print(id);
-    _gsm.print("\",");
-    _gsm.print(120);
-    _gsm.print(",");
-    _gsm.println(0);
+    _gsm->print("AT+MQTTCONN=\"");
+    _gsm->print(broker);
+    _gsm->print("\",");
+    _gsm->print(port);
+    _gsm->print(",\"");
+    _gsm->print(id);
+    _gsm->print("\",");
+    _gsm->print(120);
+    _gsm->print(",");
+    _gsm->println(0);
 
     if (_checkResponse(2000))
     {
@@ -728,7 +741,7 @@ bool GSM::ConnectToBroker(const char broker[], int port)
 
 bool GSM::DisconnectBroker()
 {
-    _gsm.println("AT+MQTTDISCONN");
+    _gsm->println("AT+MQTTDISCONN");
     if (_checkResponse(2000))
     {
         Serial.println(F("MQTT Disconnected From Broker"));
@@ -739,12 +752,12 @@ bool GSM::DisconnectBroker()
 }
 bool GSM::SubscribeToTopic(const char topic[], uint8_t qos, unsigned long timeout)
 {
-    _gsm.print("AT+MQTTSUB=\"");
-    _gsm.print(topic);
-    _gsm.print("\",");
-    _gsm.print(qos);
-    _gsm.print(",");
-    _gsm.println(timeout);
+    _gsm->print("AT+MQTTSUB=\"");
+    _gsm->print(topic);
+    _gsm->print("\",");
+    _gsm->print(qos);
+    _gsm->print(",");
+    _gsm->println(timeout);
 
     if (_checkResponse(2000))
     {
@@ -756,12 +769,12 @@ bool GSM::SubscribeToTopic(const char topic[], uint8_t qos, unsigned long timeou
 }
 bool GSM::SubscribeToTopic(const char topic[])
 {
-    _gsm.print("AT+MQTTSUB=\"");
-    _gsm.print(topic);
-    _gsm.print("\",");
-    _gsm.print(1);
-    _gsm.print(",");
-    _gsm.println(0);
+    _gsm->print("AT+MQTTSUB=\"");
+    _gsm->print(topic);
+    _gsm->print("\",");
+    _gsm->print(1);
+    _gsm->print(",");
+    _gsm->println(0);
 
     if (_checkResponse(2000))
     {
@@ -774,9 +787,9 @@ bool GSM::SubscribeToTopic(const char topic[])
 
 bool GSM::UnsubscribeToTopic(const char topic[])
 {
-    _gsm.print("AT+MQTTUNSUB=\"");
-    _gsm.print(topic);
-    _gsm.println("\"");
+    _gsm->print("AT+MQTTUNSUB=\"");
+    _gsm->print(topic);
+    _gsm->println("\"");
     if (_checkResponse(2000))
     {
         Serial.printf("Unsubscribe To Topic:\"%s\"  success\n", topic);
@@ -789,11 +802,11 @@ bool GSM::UnsubscribeToTopic(const char topic[])
 
 bool GSM::PublishToTopic(const char topic[], const char msg[])
 {
-    _gsm.print("AT+MQTTPUB=\"");
-    _gsm.print(topic);
-    _gsm.print("\",\"");
-    _gsm.print(msg);
-    _gsm.println("\",2,0,0");
+    _gsm->print("AT+MQTTPUB=\"");
+    _gsm->print(topic);
+    _gsm->print("\",\"");
+    _gsm->print(msg);
+    _gsm->println("\",2,0,0");
 
     if (_checkResponse(2000))
     {
@@ -810,7 +823,7 @@ bool GSM::PublishToTopic(const char topic[], const char msg[])
 
 bool GSM::ActivateTE()
 {
-    _gsm.println(F("AT+CNMI=0,1,0,0,0"));
+    _gsm->println(F("AT+CNMI=0,1,0,0,0"));
     if (_checkResponse(2000))
     {
         return true;
@@ -821,8 +834,8 @@ bool GSM::ActivateTE()
 
 bool GSM::SetFormatReading(bool mode)
 {
-    _gsm.print(F("AT+CMGF="));
-    _gsm.println(mode);
+    _gsm->print(F("AT+CMGF="));
+    _gsm->println(mode);
     if (_checkResponse(2000))
     {
         return true;
@@ -833,7 +846,7 @@ bool GSM::SetFormatReading(bool mode)
 
 bool GSM::SetMessageStorageUnit()
 {
-    _gsm.println(F("AT+CPMS=\"ME\",\"ME\",\"ME\""));
+    _gsm->println(F("AT+CPMS=\"ME\",\"ME\",\"ME\""));
     if (_checkResponse(2000))
     {
         return true;
@@ -843,29 +856,29 @@ bool GSM::SetMessageStorageUnit()
 }
 
 void GSM::CheckMessageStorageUnit(){
-    _gsm.println(F("AT+CPBS?"));
+    _gsm->println(F("AT+CPBS?"));
 }
 
 
 void GSM::ReadMessage(uint8_t index){
-    _gsm.print("AT+CMGR=");
-    _gsm.println(index);
+    _gsm->print("AT+CMGR=");
+    _gsm->println(index);
 }
 
 void GSM::DeleteMessage(uint8_t index,Message_Type_t type){
-    _gsm.print(F("AT+CMGD="));
-    _gsm.print(index);
-    _gsm.print(F(","));
-    _gsm.println(type);
+    _gsm->print(F("AT+CMGD="));
+    _gsm->print(index);
+    _gsm->print(F(","));
+    _gsm->println(type);
 }
 
 bool GSM::SendMessage(const char number[], const char message[])
 {
-    _gsm.print(F("AT+CMGS=\""));
-    _gsm.print(number);
-    _gsm.print(F("\"\r"));
-    _gsm.print(message);
-    _gsm.println((char)26);
+    _gsm->print(F("AT+CMGS=\""));
+    _gsm->print(number);
+    _gsm->print(F("\"\r"));
+    _gsm->print(message);
+    _gsm->println((char)26);
     if(_checkResponse(2000)){
         return true;
     }

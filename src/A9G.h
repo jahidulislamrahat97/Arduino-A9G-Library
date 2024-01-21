@@ -30,13 +30,14 @@
 #define A9G_H
 
 #include <Arduino.h>
-#include <HardwareSerial.h>
+#include<Stream.h>
 #include "A9G_Event.h"
 
 #define MAX_WAIT_TIME_MS 60000
 #define MAX_TERM_SIZE 100
 #define MAX_AT_RESPONSE_SIZE 128
 #define MAX_MSG_SIZE 128
+
 
 /**
  * @brief Main GSM class
@@ -45,7 +46,7 @@
 class GSM
 {
 private:
-    HardwareSerial &_gsm;
+    Stream *_gsm;
 
     bool _debug;
     unsigned long _maxWaitTimeMS;
@@ -85,32 +86,13 @@ private:
 
     const char _terms_string[25][15] = {"CREG", "CTZV", "CIEV", "CPMS", "CMT", "CMTI", "CMGL", "CMGR", "GPSRD", "CGATT", "AGPS", "GPNT", "MQTTPUBLISH", "CMGS", "CME ERROR", "CMS ERROR", "CSQ","EGMR","CCID"};
 
-    /**
-     * @brief Check if a given string corresponds to a known term.
-     *
-     * This function checks if the provided string matches any of the known terms.
-     *
-     * @param term_str The string to check.
-     * @return The corresponding term if found, TERM_NONE otherwise.
-     */
     uint8_t _checkTermFromString(const char *term_str);
-
-    /**
-     * @brief Process a term string from the A9G module.
-     *
-     * This function extracts relevant information from the received term string based on the event ID.
-     *
-     * @param event Pointer to the event structure.
-     * @param data Pointer to the data string.
-     * @param data_len Length of the data string.
-     */
     void _processTermString(A9G_Event_t *event, const char data[], int data_len);
-
     bool _checkResponse(const int timeout); //  it will be private. need to fix timeout
     bool _checkOk(const int timeout);
 
 public:
-    GSM(HardwareSerial &A9G, bool debug);
+    GSM(bool debug);
 
     /**
      * @brief Initialize the GSM module with the specified baud rate.
@@ -119,7 +101,9 @@ public:
      *
      * @param baudRate The communication baud rate for the GSM module.
      */
-    void init(uint32_t baudRate);
+    void init(Stream *gsm);
+    void Test(char *data);
+
 
     /**
      * @brief Register a callback function for event dispatching.
