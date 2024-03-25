@@ -30,7 +30,7 @@
 #define A9G_H
 
 #include <Arduino.h>
-#include<Stream.h>
+#include <Stream.h>
 #include "A9G_Event.h"
 
 #define MAX_WAIT_TIME_MS 60000
@@ -62,7 +62,7 @@ private:
     typedef enum Term_List_t
     {
         TERM_CREG = 0,
-        TERM_CTZV, // network related: not clear
+        TERM_CTZV, // CTZR time zone related: not clear
         TERM_CIEV, // call
         TERM_CPMS,
         TERM_CMT,
@@ -90,6 +90,8 @@ private:
     void _processTermString(A9G_Event_t *event, const char data[], int data_len);
     bool _checkResponse(const int timeout); //  it will be private. need to fix timeout
     bool _checkOk(const int timeout);
+    bool _sms;
+    int _sms_i;
 
 public:
     GSM(bool debug);
@@ -399,8 +401,6 @@ public:
 /*
 Basic Commands:
 
-AT: Test command. Returns "OK" if the module is responsive.
-
 AT+IPR=<baudrate>: Set the serial port baud rate.
 
 AT+CPIN?: Check if a SIM card is inserted and if it requires a PIN.
@@ -411,26 +411,9 @@ AT+CREG?: Check for network registration status.
 
 AT+CGREG?: Check for GPRS network registration status.
 
-AT+CSQ: Check signal strength (in dBm).
-
-AT+CCID: Read the ICCID (Integrated Circuit Card Identifier) of the SIM card.
-
-AT+CGSN: Get the IMEI (International Mobile Equipment Identity) of the module.
 
 
 
-
-GPRS/Internet Commands:
-
-AT+CGATT?: Check if GPRS is attached.
-
-AT+CGATT=1: Attach to GPRS.
-
-AT+CGATT=0: Detach from GPRS.
-
-AT+CGDCONT=<cid>,"<PDP_type>","<APN>": Set the APN for data connection.
-
-AT+CGACT=<state>[,<cid>]: Activate or deactivate a PDP context.
 
 //TCP/IP Commands:
 AT+CIPSTATUS: Check current connection status.
@@ -447,19 +430,6 @@ AT+CIFSR: Get local IP address.
 
 
 
-
-
-MQTT Commands (if supported):
-
-AT+MQTTCONN="<broker>","<port>","<client_id>",<keep_alive>,<clean_session>: Connect to MQTT broker.
-
-AT+MQTTDISCONN: Disconnect from MQTT broker.
-
-AT+MQTTPUB="<topic>",<qos>,<retain>,<dup>,"<message>",<message_len>,<timeout>: Publish a message to an MQTT topic.
-
-AT+MQTTSUB="<topic>",<qos>,<timeout>: Subscribe to an MQTT topic.
-
-AT+MQTTUNSUB="<topic>": Unsubscribe from an MQTT topic.
 
 
 
@@ -483,7 +453,6 @@ AT+CMEE: Set command error result code.
 
 AT+GSV: Get software version information.
 
-AT+ICCID: Read the ICCID of the SIM card.
-
 AT+CBC: Check battery status.
+
 */

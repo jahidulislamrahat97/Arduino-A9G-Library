@@ -874,11 +874,16 @@ void GSM::DeleteMessage(uint8_t index,Message_Type_t type){
 
 bool GSM::SendMessage(const char number[], const char message[])
 {
+    _gsm->println(F("AT+CMGF=1"));
+    delay(100);
     _gsm->print(F("AT+CMGS=\""));
     _gsm->print(number);
-    _gsm->print(F("\"\r"));
+    _gsm->print(F("\"\r\n"));
+    delay(100);
     _gsm->print(message);
     _gsm->println((char)26);
+
+
     if(_checkResponse(2000)){
         return true;
     }
