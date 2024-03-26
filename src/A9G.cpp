@@ -72,13 +72,13 @@ uint8_t GSM::_checkTermFromString(const char *term_str)
 
 void GSM::_processTermString(A9G_Event_t *event, const char data[], int data_len)
 {
-    Serial.println(" IN _processTermString: ");
-    Serial.print("event->id: ");
-    Serial.println(event->id);
-    Serial.print("data: ");
-    Serial.println(data);
-    Serial.print("data_len: ");
-    Serial.println(data_len);
+    // Serial.println("\nCore >> _processTermString(): ");
+    // Serial.print("event->id: ");
+    // Serial.println(event->id);
+    // Serial.print("data: ");
+    // Serial.println(data);
+    // Serial.print("data_len: ");
+    // Serial.println(data_len);
 
     uint8_t comma_count = 0;
     uint8_t message_count = 0;
@@ -200,7 +200,6 @@ void GSM::_processTermString(A9G_Event_t *event, const char data[], int data_len
             else{
                 buffer[i] = data[i];
             }
-
         }
         event->param1 =atoi(buffer);
     }
@@ -341,7 +340,7 @@ bool GSM::_checkResponse(const int timeout)
         {
             char c = _gsm->read();
             response[idx++] = c;
-            Serial.print(c);
+            // Serial.print(c);
 
             if (c == '+' && !term_started && !term_ended)
             {
@@ -354,7 +353,7 @@ bool GSM::_checkResponse(const int timeout)
 
             if ((c == ':') && !term_ended)
             {
-                Serial.println("********** Term Stop!");
+                // Serial.println("********** Term Stop!");
                 term[term_length] = '\0';
                 term_ended = 1;
                 continue;
@@ -378,13 +377,13 @@ bool GSM::_checkResponse(const int timeout)
 
             if (term_started && term_ended && !term_data_started)
             {
-                Serial.print(">>>term: \"");
-                Serial.print(term);
-                Serial.println("\"");
+                // Serial.print(">>>term: \"");
+                // Serial.print(term);
+                // Serial.println("\"");
 
                 int term_id = _checkTermFromString(term);
-                Serial.print("term id: ");
-                Serial.println(term_id);
+                // Serial.print("term id: ");
+                // Serial.println(term_id);
 
                 if (term_id == TERM_GPSRD || term_id == TERM_CMGS || term_id == TERM_CMGL || term_id == TERM_CIEV || term_id == TERM_NONE || term_id == TERM_MAX)
                 {
@@ -406,8 +405,8 @@ bool GSM::_checkResponse(const int timeout)
             {
                 if (c == '\r')
                 {
-                    Serial.print(">>>term data:");
-                    Serial.println(term_data);
+                    // Serial.print(">>>term data:");
+                    // Serial.println(term_data);
                     term_started = 0;
                     term_ended = 0;
                     term_length = 0;
@@ -493,7 +492,7 @@ bool GSM::waitForReady()
             char c = _gsm->read();
             responseBuffer[index++] = c;
             // Serial.print(responseBuffer);
-            Serial.write(c);
+            // Serial.write(c);
 
 
             if (c == '+' && !term_started && !term_ended)
