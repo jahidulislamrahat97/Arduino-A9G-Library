@@ -88,7 +88,7 @@ void GSM::_processTermString(A9G_Event_t *event, const char data[], int data_len
         uint8_t topic_count = 0;
         for (int i = 0; i <= data_len; i++)
         {
-            if (data[i] == ',')
+            if (data[i] == ',' && comma_count < 3)
             {
                 comma_count++;
                 continue;
@@ -98,7 +98,7 @@ void GSM::_processTermString(A9G_Event_t *event, const char data[], int data_len
                 event->topic[topic_count++] = data[i];
                 // Serial.print(data[i]);
             }
-            if(comma_count == 3){
+            if(comma_count >= 3){
                 event->message[message_count++] = data[i];
             }
         }
@@ -692,6 +692,35 @@ bool GSM::ActivatePDP()
         return false;
 }
 
+
+bool GSM::ConnectToBroker(const char broker[], int port, const char user[], const char pass[], const char id[], uint8_t keep_alive, uint16_t clean_session)
+{
+    _gsm->print("AT+MQTTCONN=\"");
+    _gsm->print(broker);
+    _gsm->print("\",");
+    _gsm->print(port);
+    _gsm->print(",\"");
+    _gsm->print(id);
+    _gsm->print("\",");
+    _gsm->print(keep_alive);
+    _gsm->print(",");
+    _gsm->print(clean_session);
+    _gsm->print(",\"");
+    _gsm->print(user);
+    _gsm->print("\",\"");
+    _gsm->print(pass);
+    _gsm->println("\"");
+
+    if (_checkResponse(2000))
+    {
+        if (_debug)
+            Serial.println(F("Connected To Broker"));
+        return true;
+    }
+    else
+        return false;
+}
+
 bool GSM::ConnectToBroker(const char broker[], int port, const char id[], uint8_t keep_alive, uint16_t clean_session)
 {
     _gsm->print("AT+MQTTCONN=\"");
@@ -904,7 +933,7 @@ void GSM::vSendMessage(const char number[], const char message[])
     _gsm->print(message);
     _gsm->println((char)26);
     delay(100);
-    
+
     _gsm->println("AT");
 }
 

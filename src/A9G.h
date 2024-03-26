@@ -223,7 +223,7 @@ public:
     /*###############################################*/
     /*********************  MQTT *********************/
     /*###############################################*/
-
+    bool ConnectToBroker(const char broker[], int port, const char user[], const char pass[], const char id[], uint8_t keep_alive, uint16_t clean_session);
     /**
      * @brief Connects to the MQTT broker with the specified parameters.
      *
