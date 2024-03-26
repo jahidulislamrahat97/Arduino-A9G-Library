@@ -378,7 +378,8 @@ public:
      * @return true if the message was sent successfully, false otherwise.
      *
      */
-    bool SendMessage(const char number[], const char message[]);
+    bool bSendMessage(const char number[], const char message[]);
+    void vSendMessage(const char number[], const char message[]);
 
 
 

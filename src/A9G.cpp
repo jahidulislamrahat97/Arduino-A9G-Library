@@ -872,7 +872,8 @@ void GSM::DeleteMessage(uint8_t index,Message_Type_t type){
     _gsm->println(type);
 }
 
-bool GSM::SendMessage(const char number[], const char message[])
+//still some issue did get responce poperly
+bool GSM::bSendMessage(const char number[], const char message[])
 {
     _gsm->println(F("AT+CMGF=1"));
     delay(100);
@@ -881,7 +882,9 @@ bool GSM::SendMessage(const char number[], const char message[])
     _gsm->print(F("\"\r\n"));
     delay(100);
     _gsm->print(message);
-    _gsm->println((char)26);
+    _gsm->write(0x1a);
+    delay(100);
+    _gsm->println("AT");
 
 
     if(_checkResponse(2000)){
@@ -890,6 +893,17 @@ bool GSM::SendMessage(const char number[], const char message[])
     else{
         return false;
     }
+}
+
+void GSM::vSendMessage(const char number[], const char message[])
+{
+
+    _gsm->print(F("AT+CMGS=\""));
+    _gsm->print(number);
+    _gsm->print(F("\"\r\n"));
+    delay(100);
+    _gsm->print(message);
+    _gsm->println((char)26);
 }
 
 
