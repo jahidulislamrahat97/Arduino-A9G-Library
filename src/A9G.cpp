@@ -904,6 +904,7 @@ void GSM::vSendMessage(const char number[], const char message[])
     _gsm->print(message);
     _gsm->println((char)26);
     delay(100);
+    
     _gsm->println("AT");
 }
 
