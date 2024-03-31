@@ -85,6 +85,15 @@ Thanks goes to these wonderful people:
         <br />
         <a href="#testing" title="Testing">⚠</a>
     </td>
+    <td align="center">
+        <a href="https://github.com/S-H-E-F-A">
+            <img src="https://avatars.githubusercontent.com/u/51834636?v=4" width="100px;" alt=""/>
+            <br />
+            <sub><b>SH∃FA</b></sub>
+        </a>
+        <br />
+        <a href="#documentation" title="Documentation">📖</a>
+    </td>
   </tr>
 
 
