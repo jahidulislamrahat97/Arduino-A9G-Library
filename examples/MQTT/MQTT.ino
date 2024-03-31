@@ -16,8 +16,8 @@
 #define USER            ""
 #define PASS            ""
 #define UNIQUE_ID       "dknvkfdnvj"
-#define PUB_TOPIC       "Robot/PUB"
-#define SUB_TOPIC       "Robot/SUB"
+#define PUB_TOPIC       "IoT/PUB"
+#define SUB_TOPIC       "IoT/SUB"
 #define CLEAN_SEASSION  0
 #define KEEP_ALIVE      120
 
