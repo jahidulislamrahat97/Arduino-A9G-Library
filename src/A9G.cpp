@@ -86,7 +86,7 @@ void GSM::_processTermString(A9G_Event_t *event, const char data[], int data_len
     if (event->id == TERM_MQTTPUBLISH)
     {
         uint8_t topic_count = 0;
-        for (int i = 0; i <= data_len; i++)
+        for (int i = 0; i < data_len; i++)
         {
             if (data[i] == ',' && comma_count < 3)
             {
@@ -483,16 +483,15 @@ bool GSM::waitForReady()
 
 
     _gsm->println("AT");
-
     // need make this function break until it gets ready command
     while (1)
     {
-        while (_gsm->available())
+        if(_gsm->available())
         {
             char c = _gsm->read();
             responseBuffer[index++] = c;
             // Serial.print(responseBuffer);
-            // Serial.write(c);
+            // Serial.print(c);
 
 
             if (c == '+' && !term_started && !term_ended)
@@ -589,6 +588,10 @@ bool GSM::waitForReady()
                 {
                     return true;
                 }
+                if (strstr(responseBuffer, "NO SIM CARD") != NULL)
+                {
+                    Serial.println("NO SIM CARD");
+                }
 
                 index = 0; // Reset index for next response
             }
@@ -629,12 +632,10 @@ bool GSM::IsGPRSAttached()
     _gsm->println("AT+CGATT?");
     if (_checkResponse(2000))
     {
-        Serial.println(F("GPRS Attached"));
         return true;
     }
     else
     {
-        Serial.println(F("GPRS is not Attached"));
         return false;
     }
 }
@@ -644,7 +645,6 @@ bool GSM::AttachToGPRS()
     _gsm->println("AT+CGATT=1");
     if (_checkResponse(2000))
     {
-        Serial.println(F("Attach to GPRS Success"));
         return true;
     }
     else
@@ -655,8 +655,7 @@ bool GSM::DetachToGPRS()
 {
     _gsm->println("AT+CGATT=0");
     if (_checkResponse(2000))
-    {
-        Serial.println(F("Detach to GPRS Success"));
+    {;
         return true;
     }
     else
@@ -673,7 +672,6 @@ bool GSM::SetAPN(const char pdp_type[], const char apn[])
 
     if (_checkResponse(2000))
     {
-        Serial.println(F("APN Set success"));
         return true;
     }
     else
@@ -685,7 +683,6 @@ bool GSM::ActivatePDP()
     _gsm->println("AT+CGACT=1,1");
     if (_checkResponse(2000))
     {
-        Serial.println(F("PDP Activate success"));
         return true;
     }
     else
@@ -713,8 +710,6 @@ bool GSM::ConnectToBroker(const char broker[], int port, const char user[], cons
 
     if (_checkResponse(2000))
     {
-        if (_debug)
-            Serial.println(F("Connected To Broker"));
         return true;
     }
     else
@@ -736,7 +731,6 @@ bool GSM::ConnectToBroker(const char broker[], int port, const char id[], uint8_
 
     if (_checkResponse(2000))
     {
-        Serial.println(F("Connected To Broker"));
         return true;
     }
     else
@@ -760,7 +754,6 @@ bool GSM::ConnectToBroker(const char broker[], int port)
 
     if (_checkResponse(2000))
     {
-        Serial.println(F("Connected To Broker"));
         return true;
     }
     else
@@ -772,7 +765,6 @@ bool GSM::DisconnectBroker()
     _gsm->println("AT+MQTTDISCONN");
     if (_checkResponse(2000))
     {
-        Serial.println(F("MQTT Disconnected From Broker"));
         return true;
     }
     else
