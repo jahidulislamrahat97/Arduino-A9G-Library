@@ -1,70 +1,86 @@
+/*********************************************************************************
+   If this code works, it was written by Jahidul Islam Rahat.
+   If not, I don't know who wrote it.
+   :) xD
+
+   Author: Jahidul Islam Rahat.
+   Date: 25 March 2024.
+*********************************************************************************/
+
+
 #include <Arduino.h>
 #include <A9G.h>
+
+#define BROKER_NAME     "broker.hivemq.com"
+#define PORT            1883
+#define USER            ""
+#define PASS            ""
+#define UNIQUE_ID       "dknvkfdnvj"
+#define PUB_TOPIC       "Robot/PUB"
+#define SUB_TOPIC       "Robot/SUB"
+#define CLEAN_SEASSION  0
+#define KEEP_ALIVE      120
 
 HardwareSerial A9G(2);
 GSM gsm(1);
 
 const int gsm_pin = 15;
-
 unsigned long tic = millis();
-int counter = 0;
-char data[50] = "\0";
+char data[50] = "Hello IoT";
 
 
 
-void eventDispatch(A9G_Event_t *event)
-{
-  switch (event->id)
-  {
-  case EVENT_MQTTPUBLISH:
-    Serial.print("Topic: ");
-    Serial.println(event->topic);
-    Serial.printf("message: %s\n", event->message);
-    break;
+void eventDispatch(A9G_Event_t *event) {
+  switch (event->id) {
+    case EVENT_MQTTPUBLISH:
+      Serial.print("Topic: ");
+      Serial.println(event->topic);
+      Serial.printf("message: %s\n", event->message);
+      break;
 
-  case EVENT_NEW_SMS_RECEIVED:
-    Serial.print("Number: ");
-    Serial.println(event->number);
-    Serial.print("Message: ");
-    Serial.println(event->message);
-    Serial.print("Date & Time: ");
-    Serial.println(event->date_time);
-    break;
+    case EVENT_NEW_SMS_RECEIVED:
+      Serial.print("Number: ");
+      Serial.println(event->number);
+      Serial.print("Message: ");
+      Serial.println(event->message);
+      Serial.print("Date & Time: ");
+      Serial.println(event->date_time);
+      break;
 
-  case EVENT_CSQ:
-    Serial.print("CSQ: ");
-    Serial.println(event->param1);
-    break;
+    case EVENT_CSQ:
+      Serial.print("CSQ: ");
+      Serial.println(event->param1);
+      break;
 
-  case EVENT_IMEI:
-    Serial.print("IMEI: ");
-    Serial.println(event->param2);
-    break;
+    case EVENT_IMEI:
+      Serial.print("IMEI: ");
+      Serial.println(event->param2);
+      break;
 
-  case EVENT_CCID:
-    Serial.print("CCID: ");
-    Serial.println(event->param2);
-    break;
+    case EVENT_CCID:
+      Serial.print("CCID: ");
+      Serial.println(event->param2);
+      break;
 
-  case EVENT_CME:
-    Serial.print("CME ERROR Message:");
-    gsm.errorPrintCME(event->error);
-    break;
+    case EVENT_CME:
+      Serial.print("CME ERROR Message:");
+      gsm.errorPrintCME(event->error);
+      break;
 
-  case EVENT_CMS:
-    Serial.print("CMS ERROR Message:");
-    gsm.errorPrintCMS(event->error);
-    break;
+    case EVENT_CMS:
+      Serial.print("CMS ERROR Message:");
+      gsm.errorPrintCMS(event->error);
+      break;
 
-  default:
-    break;
+    default:
+      break;
   }
 }
 
-void setup()
-{
+void setup() {
   Serial.begin(115200);
 
+  // GSM power reset would be best for specially in bangladesh 2g/3g network. it's not mandatory but try to use it.
   pinMode(gsm_pin, OUTPUT);
   digitalWrite(gsm_pin, HIGH);
   delay(4000);
@@ -74,50 +90,89 @@ void setup()
 
   A9G.begin(115200);
   gsm.init(&A9G);
-
   gsm.EventDispatch(eventDispatch);
 
 
-
-  if (gsm.waitForReady())
-  {
+ 
+  //Don not use this function if you are not aware of this funciton. it's fully blocking code but it's very usefull.
+  if(gsm.waitForReady()){
     Serial.println("A9G Ready");
   }
-  else
-  {
-    Serial.println("A9G Not Ready");
-  }
+
+  // if (gsm.bIsReady()) {
+  //   Serial.println("A9G Ready");
+  // } else {
+  //   Serial.println("A9G Not Ready");
+  // }
 
   // gprs connection
-  gsm.AttachToGPRS();
-  gsm.SetAPN("IP", "internet");
-  gsm.ActivatePDP();
+  if (gsm.AttachToGPRS()) {
+    Serial.println("GPRS Attach Success");
+  } else {
+    Serial.println("GPRS Attach Fail");
+  }
 
-  //mqtt connection
-  gsm.DisconnectBroker();
-  // gsm.ConnectToBroker("broker.hivemq.com", 1883, "broker user id", "broker password", "akdvnkadfjvdfkj", 120, 0)
-  // gsm.ConnectToBroker("broker.hivemq.com", 1883, "dknvkfdnvj", 120, 0)
-  gsm.ConnectToBroker("broker.hivemq.com", 1883);
-  gsm.SubscribeToTopic("Robot/SUB", 1, 0);
-  gsm.PublishToTopic("Robot/PUB", "Robot Started");
 
+  /*
+    Set APN for Specific SIM Card
+    In Bangladesh:
+      Robi          : PDP>IP, APN>internet
+      Banglalink    : PDP>IP, APN>blweb
+      Grameen Phone : PDP>IP, APN>internet
+      Teletalk      : PDP>IP, APN>wap
+  */
+  if (gsm.SetAPN("IP", "internet")) {
+    Serial.println("APN Set Success");
+  } else {
+    Serial.println("APN Set Fail");
+  }
+
+   //Activate PDP Context
+  if (gsm.ActivatePDP()) {
+    Serial.println("Activate PDP Success");
+  } else {
+    Serial.println("Activate PDP Fail");
+  }
+
+  //disconnect the broker
+  if (gsm.DisconnectBroker()) {
+    Serial.println("Broker Disconnect Success");
+  } else {
+    Serial.println("Broker Disconnect Fail");
+  }
+
+  // connect with broker
+  // gsm.ConnectToBroker(BROKER_NAME, PORT, USER, PASS, UNIQUE_ID, KEEP_ALIVE, CLEAN_SEASSION)
+  // gsm.ConnectToBroker(BROKER_NAME, PORT);
+  if (gsm.ConnectToBroker(BROKER_NAME, PORT, UNIQUE_ID, KEEP_ALIVE, CLEAN_SEASSION)) {
+    Serial.println("Broker Connect Success");
+  } else {
+    Serial.println("Broker Connect Fail");
+  }
+
+  //subscribe the broker
+  if (gsm.SubscribeToTopic(SUB_TOPIC, 1, 0)) {
+    Serial.println("Subscribe Success");
+  } else {
+    Serial.println("Subscribe Fail");
+  }
+
+  //publish data to broker
+  if (gsm.PublishToTopic(PUB_TOPIC, "Hello IoT Started")) {
+    Serial.println("Message Publish Success");
+  } else {
+    Serial.println("Message Publish Fail");
+  }
 }
 
-void loop()
-{
+void loop() {
   gsm.executeCallback();
 
-  if (millis() - tic >= 10000)
-  {
-    counter++;
-    sprintf(data, "Hello Robot %d", counter);
-    if (gsm.PublishToTopic("Robot/PUB", data))
-    {
-      Serial.println("Mqtt send success");
-    }
-    else
-    {
-      Serial.println("Mqtt send fail");
+  if (millis() - tic >= 5000) {
+    if (gsm.PublishToTopic(PUB_TOPIC, data)) {
+      Serial.println("data send success");
+    } else {
+      Serial.println("data send fail");
     }
     tic = millis();
   }
