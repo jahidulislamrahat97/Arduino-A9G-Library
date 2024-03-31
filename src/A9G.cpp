@@ -17,7 +17,7 @@
  *
  * @section author Author
  * 
- * Written by Jahidul Islam Rahat for esp32.
+ * Written by Jahidul Islam Rahat
  *
  * 
  * @section license License
@@ -83,7 +83,7 @@ void GSM::_processTermString(A9G_Event_t *event, const char data[], int data_len
     uint8_t comma_count = 0;
     uint8_t message_count = 0;
 
-    if (event->id == TERM_MQTTPUBLISH)
+    if (event->id == EVENT_MQTTPUBLISH)
     {
         uint8_t topic_count = 0;
         for (int i = 0; i < data_len; i++)
@@ -151,7 +151,7 @@ void GSM::_processTermString(A9G_Event_t *event, const char data[], int data_len
             }
             if(sms){
                 event->message[j++] = c;
-                Serial.print(event->message);
+                // Serial.print(event->message);
             }
             
         }
