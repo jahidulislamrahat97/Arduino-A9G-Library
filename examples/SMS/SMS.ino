@@ -1,17 +1,24 @@
+/*********************************************************************************
+   If this code works, it was written by Jahidul Islam Rahat.
+   If not, I don't know who wrote it.
+   :) xD
+
+   Author: Jahidul Islam Rahat.
+   Date: 25 March 2024.
+*********************************************************************************/
+
 #include <A9G.h>
 #include <HardwareSerial.h>
 
-#define DEBUG 1
-
-
 HardwareSerial A9G(2);
-GSM gsm(DEBUG);
+GSM gsm(1);
+
+
+#define PHONE_NO            "017*******"
 
 
 const int gsm_pin = 15;
 unsigned long toc = millis();
-int sms_counter = 0;
-char data[50] = "\0";
 
 
 void eventDispatch(A9G_Event_t *event) {
@@ -65,6 +72,7 @@ void eventDispatch(A9G_Event_t *event) {
 void setup() {
   Serial.begin(115200);
 
+// GSM power reset would be best for specially in bangladesh 2g/3g network. it's not mandatory but try to use it.
   pinMode(gsm_pin, OUTPUT);
   digitalWrite(gsm_pin, HIGH);
   delay(4000);
@@ -76,11 +84,16 @@ void setup() {
   gsm.init(&A9G);
   gsm.EventDispatch(eventDispatch);
 
-  if (gsm.waitForReady()) {
+  //Don not use this function if you are not aware of this funciton. it's fully blocking code but it's very usefull.
+  if(gsm.waitForReady()){
     Serial.println("A9G Ready");
-  } else {
-    Serial.println("A9G Not Ready");
   }
+
+  // if (gsm.bIsReady()) {
+  //   Serial.println("A9G Ready");
+  // } else {
+  //   Serial.println("A9G Not Ready");
+  // }
 
   delay(3000);
   gsm.ActivateTE();
@@ -101,11 +114,8 @@ void loop() {
   gsm.executeCallback();
 
   if (millis() - toc >= 30000) {
-    sms_counter++;
-    sprintf(data, "Hello Rahat %d", sms_counter);
-    Serial.printf("Sending SMS: %s\n", data);
-
-    gsm.vSendMessage("01763340263", data);
+    Serial.println("Sending SMS");
+    // gsm.vSendMessage(PHONE_NO, "Hello Rahat");
 
     toc = millis();
   }
