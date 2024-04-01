@@ -875,6 +875,51 @@ bool GSM::SetMessageStorageUnit()
         return false;
 }
 
+bool SetMessageStorageUnit(SMS_Storage_Type_t mem1, SMS_Storage_Type_t mem2, SMS_Storage_Type_t mem3)
+{
+    char m1[3] = "ME";
+    char m2[3] = "ME";
+    char m3[3] = "ME";
+
+    if(mem1 == SMS_STORAGE_TYPE_SM)
+    {
+        strcpy(m1, "SM");
+    }
+    else if(mem1 == SMS_STORAGE_TYPE_MT)
+    {
+        strcpy(m1, "MT");
+    }
+    
+    if(mem2 == SMS_STORAGE_TYPE_SM)
+    {
+        strcpy(m2, "SM");
+    }
+    else if(mem2 == SMS_STORAGE_TYPE_MT)
+    {
+        strcpy(m2, "MT");
+    }
+
+    if(mem3 == SMS_STORAGE_TYPE_SM)
+    {
+        strcpy(m3, "SM");
+    }
+    else if(mem3 == SMS_STORAGE_TYPE_MT)
+    {
+        strcpy(m3, "MT");
+    }
+
+    char command[24];
+    sprintf("AT+CPMS=\"%s\",\"%s\",\"%s\"", m1, m2, m3);
+
+    _gsm->println(command);
+    if (_checkResponse(2000))
+    {
+        return true;
+    }
+    else
+        return false;
+}
+
 void GSM::CheckMessageStorageUnit(){
     _gsm->println(F("AT+CPBS?"));
 }
