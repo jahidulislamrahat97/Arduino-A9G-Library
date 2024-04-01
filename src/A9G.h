@@ -85,6 +85,13 @@ private:
     } Term_List_t;
 
     const char _terms_string[25][15] = {"CREG", "CTZV", "CIEV", "CPMS", "CMT", "CMTI", "CMGL", "CMGR", "GPSRD", "CGATT", "AGPS", "GPNT", "MQTTPUBLISH", "CMGS", "CME ERROR", "CMS ERROR", "CSQ","EGMR","CCID"};
+    
+    typedef enum SMS_Storage_Type_t
+    {
+        SMS_STORAGE_TYPE_SM,
+        SMS_STORAGE_TYPE_ME,
+        SMS_STORAGE_TYPE_MT
+    }SMS_Storage_Type_t;
 
     uint8_t _checkTermFromString(const char *term_str);
     void _processTermString(A9G_Event_t *event, const char data[], int data_len);
@@ -330,6 +337,20 @@ public:
     * @return true if the command is successful, false otherwise.
     */
     bool SetMessageStorageUnit();
+
+
+    /**
+     * @brief Sets the message storage unit.
+     *
+     * @param <mem1>, <mem2>, and <mem3> are placeholders for the storage locations of SMS messages, status reports, and broadcast messages, respectively.
+     * 
+        "SM": This refers to the SIM card memory, where messages are stored on the SIM card.
+        "ME": This stands for the phone's memory, where messages are stored on the device itself.
+        "MT": This is the combined memory of both the SIM card and the phone's memory.
+    *
+    * @return true if the command is successful, false otherwise.
+    */
+    bool SetMessageStorageUnit(SMS_Storage_Type_t mem1, SMS_Storage_Type_t mem2, SMS_Storage_Type_t mem3);
 
     /**
      * @brief   AT+CPBS?
