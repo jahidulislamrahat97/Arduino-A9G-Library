@@ -393,6 +393,13 @@ public:
     /*###############################################*/
     /*********************  GPS  *********************/
     /*###############################################*/
+    bool TurnOnGPS(); //AT+GPS=1 
+    bool TurnOffGPS(); //AT+GPS=0
+    bool TurnOnNMEA(int seconds); //AT+GPSRD=10
+    bool TurnOffNMEA(); //AT+GPSRD=0
+    //AT+LOCATION=1: This command is used to get location data through the LBS server.
+    //AT+LOCATION=2
+    //AT+GPSUPGRADE: Release GPS UART from A9’s CPU, then you can connect GPS UART directly to communicate with GPS.
 
 
 };
